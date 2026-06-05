@@ -3,12 +3,14 @@ import { isLoggedIn, logout } from './api/auth'
 import Sidebar from './components/Sidebar'
 import TicketsPage from './pages/TicketsPage'
 import ComputersPage from './pages/ComputersPage'
+import MonitorsPage from './pages/MonitorsPage'
 import LoginPage from './pages/LoginPage'
 import './App.css'
 
 const PAGES = {
   tickets:   <TicketsPage />,
   computers: <ComputersPage />,
+  monitors:  <MonitorsPage />,
 }
 
 function App() {

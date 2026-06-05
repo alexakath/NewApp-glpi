@@ -24,7 +24,7 @@ export const getItems = async (path, params = {}) => {
     headers,
     params: { ...DEFAULT_PARAMS, ...params },
   })
-  console.debug(`[API v2] GET ${path}`, res.data)
+  console.log(`[API v2] GET ${path}`, res.data)
   // v2 peut retourner un tableau ou { data: [...], totalcount: N }
   return Array.isArray(res.data) ? res.data : (res.data?.data ?? [])
 }

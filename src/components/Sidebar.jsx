@@ -21,6 +21,16 @@ function IconComputer() {
   )
 }
 
+function IconMonitor() {
+  return (
+    <svg className="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <line x1="8" y1="21" x2="16" y2="21" />
+      <line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  )
+}
+
 function IconLogout() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -42,6 +52,7 @@ const MENU_GROUPS = [
     module: 'Parc',
     items: [
       { key: 'computers', label: 'Ordinateurs', Icon: IconComputer },
+      { key: 'monitors',  label: 'Moniteurs',   Icon: IconMonitor  },
     ],
   },
 ]

@@ -36,7 +36,7 @@ Même principe mais pour les changements planifiés réguliers.
 
 ## URLs API
 
-| Action                  | Méthode  | URL                                    |
+| Action                  | Méthode  | URL                                                 |
 
 | Lister tous les tickets | `GET`    | `/api.php/v2.3/Assistance/Ticket`                   |
 
@@ -47,6 +47,10 @@ Même principe mais pour les changements planifiés réguliers.
 | Modifier un ticket      | `PUT`    | `/api.php/v2.3/Assistance/Ticket/{id}`              |
 
 | Supprimer un ticket     | `DELETE` | `/api.php/v2.3/Assistance/Ticket/{id}`              |
+
+| Cout d'un ticket        | `GET`    | `/api.php/v2.3//Assistance/Ticket/{id}/Cost`        |
+
+| Creer le cout d'un ticket| `POST`    | `/api.php/v2.3//Assistance/Ticket/{id}/Cost`        |
 
 | Lister les problèmes    | `GET`    | `/api.php/v2.3/Assistance/Problem`                  |
 
