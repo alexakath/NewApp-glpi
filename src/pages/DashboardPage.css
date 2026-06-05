@@ -1,0 +1,120 @@
+.dash-date {
+  font-size: 0.8rem;
+  color: var(--c-text-muted);
+  text-align: right;
+  line-height: 1.5;
+}
+
+/* ── Grid ───────────────────────────────────── */
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 700px) {
+  .dash-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Stat card ──────────────────────────────── */
+
+.stat-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 1.625rem 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card-head {
+  margin-bottom: 1.625rem;
+  border-bottom: 1px solid var(--c-border-soft);
+  padding-bottom: 1.25rem;
+}
+
+.stat-card-title {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--c-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.stat-card-total {
+  font-size: 3.25rem;
+  font-weight: 800;
+  color: var(--c-text);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  margin-right: 0.5rem;
+}
+
+.stat-card-label {
+  font-size: 0.875rem;
+  color: var(--c-text-sec);
+}
+
+/* ── Rows ───────────────────────────────────── */
+
+.stat-card-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.stat-row-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stat-row-name {
+  font-size: 0.875rem;
+  color: var(--c-text-sec);
+}
+
+.stat-row-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stat-row-count {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--c-text);
+  min-width: 24px;
+  text-align: right;
+}
+
+.stat-bar-track {
+  width: 80px;
+  height: 5px;
+  background: var(--c-border-soft);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  min-width: 2px;
+}
