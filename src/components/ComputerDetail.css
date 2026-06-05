@@ -1,0 +1,148 @@
+.computer-detail {
+  padding: 2rem;
+}
+
+.cd-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 1.5rem;
+  transition: background-color 0.1s, border-color 0.1s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.cd-back:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.cd-header {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.cd-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.cd-state {
+  background-color: #e2e8f0;
+  color: #475569;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.cd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  .cd-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cd-section {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.cd-row {
+  display: flex;
+  gap: 1rem;
+  padding: 6px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.875rem;
+}
+
+.cd-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cd-label {
+  color: #94a3b8;
+  min-width: 160px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+}
+
+.cd-value {
+  color: #0f172a;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.cd-disks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.cd-disks-table th {
+  padding: 7px 12px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cd-disks-table td {
+  padding: 8px 12px;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cd-disks-table tr:last-child td {
+  border-bottom: none;
+}
+
+.cd-comment {
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.cd-loading,
+.cd-error {
+  padding: 2rem;
+  font-size: 0.9rem;
+}
+
+.cd-error {
+  color: #ef4444;
+}

@@ -1,0 +1,87 @@
+.computers-page {
+  padding: 2rem;
+}
+
+.computers-table-wrapper {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.computers-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.computers-table thead tr {
+  background-color: #f8fafc;
+}
+
+.computers-table th {
+  padding: 11px 16px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.computers-table td {
+  padding: 13px 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.computer-row:last-child td {
+  border-bottom: none;
+}
+
+.computers-table td.name-cell {
+  max-width: 220px;
+}
+
+.computer-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.computer-row {
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.computer-row:hover {
+  background-color: #f8fafc;
+}
+
+.computer-row:hover .computer-name {
+  color: #1d4ed8;
+}
+
+.computers-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.computers-loading,
+.computers-error {
+  padding: 2rem;
+  font-size: 0.9rem;
+}
+
+.computers-error {
+  color: #ef4444;
+}
