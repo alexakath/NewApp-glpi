@@ -2,18 +2,20 @@ import { useState } from 'react'
 import { login } from '../api/auth'
 import './LoginPage.css'
 
+// Code pré-rempli depuis .env — l'admin arrive, c'est déjà là, il clique juste
+const DEFAULT_CODE = import.meta.env.VITE_DEFAULT_CODE ?? ''
+
 function LoginPage({ onLogin }) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState(null)
+  const [code, setCode]       = useState(DEFAULT_CODE)
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     try {
-      await login(username, password)
+      await login(code)
       onLogin()
     } catch (err) {
       const data = err.response?.data
@@ -21,7 +23,7 @@ function LoginPage({ onLogin }) {
         data?.error_description ??
         data?.message ??
         data?.detail ??
-        'Identifiants incorrects ou serveur inaccessible.'
+        'Code incorrect ou serveur inaccessible.'
       )
     } finally {
       setLoading(false)
@@ -36,34 +38,21 @@ function LoginPage({ onLogin }) {
           <span className="login-brand-sub">GLPI Dashboard</span>
         </div>
 
-        <h1 className="login-title">Connexion</h1>
-        <p className="login-subtitle">Utilisez vos identifiants GLPI</p>
+        <h1 className="login-title">Accès Backoffice</h1>
+        <p className="login-subtitle">Entrez votre code d'accès administrateur</p>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-field">
-            <label htmlFor="username">Identifiant</label>
+            <label htmlFor="code">Code d'accès</label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="glpi"
-              autoComplete="username"
-              required
-              autoFocus
-            />
-          </div>
-
-          <div className="login-field">
-            <label htmlFor="password">Mot de passe</label>
-            <input
-              id="password"
+              id="code"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
               placeholder="••••••••"
               autoComplete="current-password"
               required
+              autoFocus
             />
           </div>
 
@@ -74,7 +63,7 @@ function LoginPage({ onLogin }) {
           )}
 
           <button className="login-btn" type="submit" disabled={loading}>
-            {loading ? 'Connexion en cours…' : 'Se connecter'}
+            {loading ? 'Vérification…' : 'Accéder'}
           </button>
         </form>
       </div>
