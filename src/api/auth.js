@@ -1,9 +1,9 @@
 import axios from 'axios'
 
-// Token endpoint GLPI — non versionné, séparé de l'API data
-const TOKEN_URL     = '/api.php/token'
-const CLIENT_ID     = import.meta.env.VITE_CLIENT_ID
-const CLIENT_SECRET = import.meta.env.VITE_CLIENT_SECRET
+const TOKEN_URL      = '/api.php/token'
+const CLIENT_ID      = import.meta.env.VITE_CLIENT_ID
+const CLIENT_SECRET  = import.meta.env.VITE_CLIENT_SECRET
+const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME   // username fixe, caché
 
 const KEY = {
   ACCESS:  'glpi_access',
@@ -12,12 +12,14 @@ const KEY = {
 }
 
 const persist = ({ access_token, refresh_token, expires_in }) => {
+  if (!access_token || typeof access_token !== 'string') {
+    throw new Error('Réponse invalide — token manquant.')
+  }
   localStorage.setItem(KEY.ACCESS,  access_token)
   localStorage.setItem(KEY.REFRESH, refresh_token ?? '')
   localStorage.setItem(KEY.EXPIRES, Date.now() + expires_in * 1_000)
 }
 
-// GLPI exige les client credentials en Basic auth header (pas dans le body)
 const clientBasic = () => `Basic ${btoa(`${CLIENT_ID}:${CLIENT_SECRET}`)}`
 
 const tokenRequest = (bodyParams) =>
@@ -32,28 +34,30 @@ const tokenRequest = (bodyParams) =>
     }
   )
 
-// Connexion avec username / password — grant_type=password (ROPC)
-export const login = async (username, password) => {
+// L'utilisateur entre uniquement un code — le username admin est fixe dans .env
+export const login = async (code) => {
   const res = await tokenRequest({
     grant_type: 'password',
-    username,
-    password,
-    scope: 'api user',
+    username:   ADMIN_USERNAME,
+    password:   code,
+    scope:      'api user',
   })
   persist(res.data)
 }
 
 export const logout = () => Object.values(KEY).forEach((k) => localStorage.removeItem(k))
 
-export const isLoggedIn = () => !!localStorage.getItem(KEY.ACCESS)
+export const isLoggedIn = () => {
+  const token = localStorage.getItem(KEY.ACCESS)
+  return !!token && token !== 'undefined' && token !== ''
+}
 
-// Retourne un access_token valide, rafraîchit automatiquement si expiré
 export const getAccessToken = async () => {
   const access  = localStorage.getItem(KEY.ACCESS)
   const refresh = localStorage.getItem(KEY.REFRESH)
   const expires = Number(localStorage.getItem(KEY.EXPIRES))
 
-  if (!access) return null
+  if (!access || access === 'undefined') return null
 
   if (Date.now() < expires - 60_000) return access
 

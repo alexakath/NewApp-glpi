@@ -1,4 +1,5 @@
 .login-page {
+  flex: 1;                /* occupe tout l'espace du #root flex parent */
   min-height: 100svh;
   display: flex;
   align-items: center;
