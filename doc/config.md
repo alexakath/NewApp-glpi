@@ -50,25 +50,25 @@ Gestion des extensions GLPI — installation, activation, désactivation des plu
 
 | Action                                    | Méthode | URL                               |
 
-| Lister les intitulés (catégories tickets) | `GET`   | `/apirest.php/ITILCategory`       |
+| Lister les intitulés (catégories tickets) | `GET`   | `/api.php/v2.3/ITILCategory`       |
 
-| Voir un intitulé                          | `GET`   |  `/apirest.php/ITILCategory/{id}` |
+| Voir un intitulé                          | `GET`   |  `/api.php/v2.3/ITILCategory/{id}` |
 
-| Lister les localisations                  | `GET`   | `/apirest.php/Location`           |
+| Lister les localisations                  | `GET`   | `/api.php/v2.3/Location`           |
 
-| Voir une localisation                     | `GET`   | `/apirest.php/Location/{id}`      |
+| Voir une localisation                     | `GET`   | `/api.php/v2.3/Location/{id}`      |
 
-| Lister les statuts d'actifs               | `GET`   | `/apirest.php/State`              |
+| Lister les statuts d'actifs               | `GET`   | `/api.php/v2.3/State`              |
 
-| Lister les composants (CPU)               | `GET`   | `/apirest.php/DeviceProcessor`    |
+| Lister les composants (CPU)               | `GET`   | `/api.php/v2.3/DeviceProcessor`    |
 
-| Lister les composants (RAM)               | `GET`   | `/apirest.php/DeviceMemory`       |
+| Lister les composants (RAM)               | `GET`   | `/api.php/v2.3/DeviceMemory`       |
 
-| Lister les notifications                  | `GET`   | `/apirest.php/Notification`       |
+| Lister les notifications                  | `GET`   | `/api.php/v2.3/Notification`       |
 
-| Lister les SLA                            | `GET`   | `/apirest.php/SLA`                |
+| Lister les SLA                            | `GET`   | `/api.php/v2.3/SLA`                |
 
-| Voir un SLA                               | `GET`   | `/apirest.php/SLA/{id}`           |
+| Voir un SLA                               | `GET`   | `/api.php/v2.3/SLA/{id}`           |
 
 ---
 

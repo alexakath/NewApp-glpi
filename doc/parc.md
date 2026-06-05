@@ -62,27 +62,27 @@ Vue consolidée de tous les types d'actifs confondus — permet de chercher n'im
 
 | Action                        | Méthode  | URL                            |
 
-| Lister les ordinateurs        | `GET`    | `/api.php/v1/Computer`         |
+| Lister les ordinateurs        | `GET`    | `/api.php/v2.3/Assets/Computer`         |
 
-| Voir un ordinateur            | `GET`    | `/api.php/v1/Computer/{id}`    |
+| Voir un ordinateur            | `GET`    | `/api.php/v2.3/Assets/Computer/{id}`    |
 
-| Créer un ordinateur           | `POST`   | `/api.php/v1/Computer`         |
+| Créer un ordinateur           | `POST`   | `/api.php/v2.3/Assets/Computer`         |
 
-| Modifier un ordinateur        | `PUT`    | `/api.php/v1/Computer/{id}`    |
+| Modifier un ordinateur        | `PUT`    | `/api.php/v2.3/Assets/Computer/{id}`    |
 
-| Supprimer un ordinateur       | `DELETE` | `/api.php/v1/Computer/{id}`    |
+| Supprimer un ordinateur       | `DELETE` | `/api.php/v2.3/Assets/Computer/{id}`    |
 
-| Lister les moniteurs          | `GET`    | `/api.php/v1/Monitor`          |
+| Lister les moniteurs          | `GET`    | `/api.php/v2.3/Assets/Monitor`          |
 
-| Lister les logiciels          | `GET`    | `/api.php/v1/Software`         |
+| Lister les logiciels          | `GET`    | `/api.php/v2.3/Assets/Software`         |
 
-| Lister les matériels réseau   | `GET`    | `/api.php/v1/NetworkEquipment` |
+| Lister les matériels réseau   | `GET`    | `/api.php/v2.3/Assets/NetworkEquipment` |
 
-| Lister les périphériques      | `GET`    | `/api.php/v1/Peripheral`       |
+| Lister les périphériques      | `GET`    | `/api.php/v2.3/Assets/Peripheral`       |
 
-| Lister les imprimantes        | `GET`    | `/api.php/v1/Printer`          |
+| Lister les imprimantes        | `GET`    | `/api.php/v2.3/Assets/Printer`          |
 
-| Lister les téléphones         | `GET`    | `/api.php/v1/Phone`            |
+| Lister les téléphones         | `GET`    | `/api.php/v2.3/Assets/Phone`            |
 
 ---
 

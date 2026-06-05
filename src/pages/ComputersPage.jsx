@@ -5,9 +5,8 @@ import './ComputersPage.css'
 
 function ComputersPage() {
   const [computers, setComputers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  // ID de l'ordinateur sélectionné — null = liste, sinon détail
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState(null)
   const [selectedId, setSelectedId] = useState(null)
 
   useEffect(() => {
@@ -18,25 +17,24 @@ function ComputersPage() {
   }, [])
 
   if (selectedId !== null) {
-    return (
-      <ComputerDetail
-        computerId={selectedId}
-        onBack={() => setSelectedId(null)}
-      />
-    )
+    return <ComputerDetail computerId={selectedId} onBack={() => setSelectedId(null)} />
   }
 
-  if (loading) return <p className="computers-loading">Chargement des ordinateurs...</p>
-  if (error)   return <p className="computers-error">Erreur : {error}</p>
+  if (loading) return <div className="page-state">Chargement des ordinateurs...</div>
+  if (error)   return <div className="page-state page-state--error">Erreur : {error}</div>
 
   return (
-    <div className="computers-page">
+    <div className="page-wrap">
       <div className="page-header">
-        <h1>Ordinateurs</h1>
-        <span className="page-count">{computers.length}</span>
+        <div>
+          <p className="page-breadcrumb">Parc</p>
+          <h1>Ordinateurs</h1>
+        </div>
+        <span className="page-count">{computers.length} appareil{computers.length !== 1 ? 's' : ''}</span>
       </div>
-      <div className="computers-table-wrapper">
-        <table className="computers-table">
+
+      <div className="table-card">
+        <table className="data-table">
           <thead>
             <tr>
               <th>#</th>
@@ -52,27 +50,28 @@ function ComputersPage() {
             {computers.map((computer) => (
               <tr
                 key={computer.id}
-                className="computer-row"
+                className="table-row"
                 onClick={() => setSelectedId(computer.id)}
               >
-                <td>{computer.id}</td>
-                <td className="name-cell">
-                  <span className="computer-name" title={computer.name}>
-                    {computer.name}
-                  </span>
+                <td className="id-cell">#{computer.id}</td>
+                <td className="title-cell">
+                  <span className="row-title" title={computer.name}>{computer.name}</span>
                 </td>
-                <td>{computer.serial || '—'}</td>
-                <td>{computer.operatingsystems_id || '—'}</td>
-                <td>{computer.locations_id || '—'}</td>
-                <td>{computer.states_id || '—'}</td>
-                <td>{computer.entities_id || '—'}</td>
+                <td className="muted">{computer.serial || '—'}</td>
+                <td className="muted">{computer.operatingsystems_id || '—'}</td>
+                <td className="muted">{computer.locations_id || '—'}</td>
+                <td>
+                  {computer.states_id
+                    ? <span className="state-pill">{computer.states_id}</span>
+                    : <span className="muted">—</span>
+                  }
+                </td>
+                <td className="muted">{computer.entities_id || '—'}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {computers.length === 0 && (
-          <p className="computers-empty">Aucun ordinateur trouvé.</p>
-        )}
+        {computers.length === 0 && <div className="table-empty">Aucun ordinateur trouvé.</div>}
       </div>
     </div>
   )

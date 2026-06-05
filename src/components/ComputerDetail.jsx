@@ -4,16 +4,13 @@ import './ComputerDetail.css'
 
 function Row({ label, value }) {
   return (
-    <div className="cd-row">
-      <span className="cd-label">{label}</span>
-      <span className="cd-value">{value ?? '—'}</span>
+    <div className="detail-row">
+      <span className="detail-label">{label}</span>
+      <span className="detail-value">{value ?? '—'}</span>
     </div>
   )
 }
 
-// Affiche le détail complet d'un ordinateur
-// computerId : ID de l'ordinateur sélectionné depuis la liste
-// onBack : callback pour revenir à la liste
 function ComputerDetail({ computerId, onBack }) {
   const [computer, setComputer] = useState(null)
   const [loading, setLoading]   = useState(true)
@@ -28,59 +25,70 @@ function ComputerDetail({ computerId, onBack }) {
       .finally(() => setLoading(false))
   }, [computerId])
 
-  if (loading) return <p className="cd-loading">Chargement de l'ordinateur...</p>
-  if (error)   return <p className="cd-error">Erreur : {error}</p>
+  if (loading) return <div className="page-state">Chargement de l'ordinateur...</div>
+  if (error)   return <div className="page-state page-state--error">Erreur : {error}</div>
 
-  const formatDate = (val) =>
-    val ? new Date(val).toLocaleString('fr-FR') : '—'
+  const fmt = (val) => val ? new Date(val).toLocaleString('fr-FR') : '—'
 
   return (
-    <div className="computer-detail">
-      <button className="cd-back" onClick={onBack}>← Retour à la liste</button>
+    <div className="detail-wrap">
+      <button className="back-btn" onClick={onBack}>
+        <svg viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd"/>
+        </svg>
+        Retour à la liste
+      </button>
 
-      <div className="cd-header">
-        <h2>{computer.name}</h2>
-        <span className="cd-state">{computer.states_id || 'État inconnu'}</span>
+      <div className="detail-header">
+        <p className="page-breadcrumb">Parc / Ordinateurs</p>
+        <div className="cd-header-row">
+          <h2>{computer.name}</h2>
+          {computer.states_id && (
+            <span className="badge" style={{ background: '#d1fae5', color: '#065f46' }}>
+              {computer.states_id}
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="cd-grid">
-        <div className="cd-section">
+      <div className="detail-grid">
+        <div className="detail-section">
           <h3>Identification</h3>
-          <Row label="Numéro de série"    value={computer.serial} />
-          <Row label="N° inventaire"      value={computer.otherserial} />
-          <Row label="Type"               value={computer.computertypes_id} />
-          <Row label="Fabricant"          value={computer.manufacturers_id} />
-          <Row label="Modèle"             value={computer.computermodels_id} />
+          <Row label="Numéro de série" value={computer.serial} />
+          <Row label="N° inventaire"   value={computer.otherserial} />
+          <Row label="Type"            value={computer.computertypes_id} />
+          <Row label="Fabricant"       value={computer.manufacturers_id} />
+          <Row label="Modèle"          value={computer.computermodels_id} />
         </div>
 
-        <div className="cd-section">
+        <div className="detail-section">
           <h3>Localisation</h3>
-          <Row label="Entité"             value={computer.entities_id} />
-          <Row label="Localisation"       value={computer.locations_id} />
-          <Row label="Groupe"             value={computer.groups_id} />
-          <Row label="Utilisateur"        value={computer.users_id} />
-          <Row label="Technicien"         value={computer.users_id_tech} />
+          <Row label="Entité"       value={computer.entities_id} />
+          <Row label="Localisation" value={computer.locations_id} />
+          <Row label="Groupe"       value={computer.groups_id} />
+          <Row label="Utilisateur"  value={computer.users_id} />
+          <Row label="Technicien"   value={computer.users_id_tech} />
         </div>
 
-        <div className="cd-section">
+        <div className="detail-section">
           <h3>Système</h3>
           <Row label="Système d'exploitation" value={computer.operatingsystems_id} />
-          <Row label="Version OS"         value={computer.operatingsystemversions_id} />
-          <Row label="Architecture"       value={computer.operatingsystemarchitectures_id} />
-          <Row label="UUID"               value={computer.uuid} />
+          <Row label="Version OS"             value={computer.operatingsystemversions_id} />
+          <Row label="Architecture"           value={computer.operatingsystemarchitectures_id} />
+          <Row label="UUID"                   value={computer.uuid} />
         </div>
 
-        <div className="cd-section">
+        <div className="detail-section">
           <h3>Dates</h3>
-          <Row label="Ajouté le"          value={formatDate(computer.date_creation)} />
-          <Row label="Dernière màj"       value={formatDate(computer.date_mod)} />
-          <Row label="Contact"            value={computer.contact} />
-          <Row label="N° contact"         value={computer.contact_num} />
+          <Row label="Ajouté le"   value={fmt(computer.date_creation)} />
+          <Row label="Dernière màj" value={fmt(computer.date_mod)} />
+          <Row label="Contact"     value={computer.contact} />
+          <Row label="N° contact"  value={computer.contact_num} />
         </div>
       </div>
 
       {computer._disks.length > 0 && (
-        <div className="cd-section">
+        <div className="detail-section">
           <h3>Disques</h3>
           <table className="cd-disks-table">
             <thead>
@@ -106,9 +114,9 @@ function ComputerDetail({ computerId, onBack }) {
       )}
 
       {computer.comment && (
-        <div className="cd-section">
+        <div className="detail-section">
           <h3>Commentaire</h3>
-          <p className="cd-comment">{computer.comment}</p>
+          <p className="detail-content">{computer.comment}</p>
         </div>
       )}
     </div>

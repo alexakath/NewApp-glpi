@@ -45,37 +45,37 @@ Inventaire des bases de données (MySQL, PostgreSQL, Oracle...) avec leur serveu
 
 ## URLs API
 
-| Action                    | Méthode | URL                                 |
+| Action                    | Méthode | URL                                           |
 
-| Lister les licences       | `GET`   | `/apirest.php/SoftwareLicense`      |
+| Lister les licences       | `GET`   | `/api.php/v2.3/Management/SoftwareLicense`      |
 
-| Voir une licence          | `GET`   | `/apirest.php/SoftwareLicense/{id}` |
+| Voir une licence          | `GET`   | `/api.php/v2.3/Management/SoftwareLicense/{id}` |
 
-| Lister les budgets        | `GET`   | `/apirest.php/Budget`               |
+| Lister les budgets        | `GET`   | `/api.php/v2.3/Management/Budget`               |
 
-| Voir un budget            | `GET`   | `/apirest.php/Budget/{id}`          |
+| Voir un budget            | `GET`   | `/api.php/v2.3/Management/Budget/{id}`          |
 
-| Créer un budget           | `POST`  | `/apirest.php/Budget`               |
+| Créer un budget           | `POST`  | `/api.php/v2.3/Management/Budget`               |
 
-| Modifier un budget        | `PUT`   | `/apirest.php/Budget/{id}`          |
+| Modifier un budget        | `PUT`   | `/api.php/v2.3/Management/Budget/{id}`          |
 
-| Lister les fournisseurs   | `GET`   | `/apirest.php/Supplier`             |
+| Lister les fournisseurs   | `GET`   | `/api.php/v2.3/Management/Supplier`             |
 
-| Voir un fournisseur       | `GET`   | `/apirest.php/Supplier/{id}`        |
+| Voir un fournisseur       | `GET`   | `/api.php/v2.3/Management/Supplier/{id}`        |
 
-| Lister les contacts       | `GET`   | `/apirest.php/Contact`              |
+| Lister les contacts       | `GET`   | `/api.php/v2.3/Management/Contact`              |
 
-| Lister les contrats       | `GET`   | `/apirest.php/Contract`             |
+| Lister les contrats       | `GET`   | `/api.php/v2.3/Management/Contract`             |
 
-| Voir un contrat           | `GET`   | `/apirest.php/Contract/{id}`        |
+| Voir un contrat           | `GET`   | `/api.php/v2.3/Management/Contract/{id}`        |
 
-| Lister les documents      | `GET`   | `/apirest.php/Document`             |
+| Lister les documents      | `GET`   | `/api.php/v2.3/Management/Document`             |
 
-| Lister les certificats    | `GET`   | `/apirest.php/Certificate`          |
+| Lister les certificats    | `GET`   | `/api.php/v2.3/Management/Certificate`          |
 
-| Lister les domaines       | `GET`   | `/apirest.php/Domain`               |
+| Lister les domaines       | `GET`   | `/api.php/v2.3/Management/Domain`               |
 
-| Lister les applicatifs    | `GET`   | `/apirest.php/SoftwareVersion`      |
+| Lister les applicatifs    | `GET`   | `/api.php/v2.3/Management/SoftwareVersion`      |
 
 ---
 

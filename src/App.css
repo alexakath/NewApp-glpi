@@ -7,6 +7,6 @@
 .app-main {
   flex: 1;
   overflow-y: auto;
-  background-color: #f1f5f9;
+  background: var(--c-bg);
   min-width: 0;
 }

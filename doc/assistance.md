@@ -38,23 +38,23 @@ Même principe mais pour les changements planifiés réguliers.
 
 | Action                  | Méthode  | URL                                    |
 
-| Lister tous les tickets | `GET`    | `/api.php/v1/Ticket`                   |
+| Lister tous les tickets | `GET`    | `/api.php/v2.3/Assistance/Ticket`                   |
 
-| Voir un ticket précis   | `GET`    | `/api.php/v1/Ticket/{id}`              |
+| Voir un ticket précis   | `GET`    | `/api.php/v2.3/Assistance/Ticket/{id}`              |
 
-| Créer un ticket         | `POST`   | `/api.php/v1/Ticket`                   |
+| Créer un ticket         | `POST`   | `/api.php/v2.3/Assistance/Ticket`                   |
 
-| Modifier un ticket      | `PUT`    | `/api.php/v1/Ticket/{id}`              |
+| Modifier un ticket      | `PUT`    | `/api.php/v2.3/Assistance/Ticket/{id}`              |
 
-| Supprimer un ticket     | `DELETE` | `/api.php/v1/Ticket/{id}`              |
+| Supprimer un ticket     | `DELETE` | `/api.php/v2.3/Assistance/Ticket/{id}`              |
 
-| Lister les problèmes    | `GET`    | `/api.php/v1/Problem`                  |
+| Lister les problèmes    | `GET`    | `/api.php/v2.3/Assistance/Problem`                  |
 
-| Lister les changements  | `GET`    | `/api.php/v1/Change`                   |
+| Lister les changements  | `GET`    | `/api.php/v2.3/Assistance/Change`                   |
 
-| Suivis d'un ticket      | `GET`    | `/api.php/v1/Ticket/{id}/ITILFollowup` |
+| Suivis d'un ticket      | `GET`    | `/api.php/v2.3/Assistance/Ticket/{id}/ITILFollowup` |
 
-| Solutions d'un ticket   | `GET`    | `/api.php/v1/Ticket/{id}/ITILSolution` |
+| Solutions d'un ticket   | `GET`    | `/api.php/v2.3/Assistance/Ticket/{id}/ITILSolution` |
 
 ---
 

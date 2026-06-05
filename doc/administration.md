@@ -36,27 +36,27 @@ Création de formulaires personnalisés pour les demandes utilisateurs — comme
 
 ## URLs API
 
-| Action                   | Méthode  | URL                        |
+| Action                   | Méthode  | URL                                      |
 
-| Lister les utilisateurs  | `GET`    | `/apirest.php/User`        |
+| Lister les utilisateurs  | `GET`    | `/api.php/v2.3/Administration/User`        |
 
-| Voir un utilisateur      | `GET`    | `/apirest.php/User/{id}`   |
+| Voir un utilisateur      | `GET`    | `/api.php/v2.3/Administration/User/{id}`   |
 
-| Créer un utilisateur     | `POST`   | `/apirest.php/User`        |
+| Créer un utilisateur     | `POST`   | `/api.php/v2.3/Administration/User`        |
 
-| Modifier un utilisateur  | `PUT`    | `/apirest.php/User/{id}`   |
+| Modifier un utilisateur  | `PUT`    | `/api.php/v2.3/Administration/User/{id}`   |
 
-| Supprimer un utilisateur | `DELETE` | `/apirest.php/User/{id}`   |
+| Supprimer un utilisateur | `DELETE` | `/api.php/v2.3/Administration/User/{id}`   |
 
-| Lister les groupes       | `GET`    | `/apirest.php/Group`       |
+| Lister les groupes       | `GET`    | `/api.php/v2.3/Administration/Group`       |
 
-| Voir un groupe           | `GET`    | `/apirest.php/Group/{id}`  |
+| Voir un groupe           | `GET`    | `/api.php/v2.3/Administration/Group/{id}`  |
 
-| Lister les entités       | `GET`    | `/apirest.php/Entity`      |
+| Lister les entités       | `GET`    | `/api.php/v2.3/Administration/Entity`      |
 
-| Voir une entité          | `GET`    | `/apirest.php/Entity/{id}` |
+| Voir une entité          | `GET`    | `/api.php/v2.3/Administration/Entity/{id}` |
 
-| Lister les profils       | `GET`    | `/apirest.php/Profile`     |
+| Lister les profils       | `GET`    | `/api.php/v2.3/Administration/Profile`     |
 
 ---
 

@@ -3,29 +3,42 @@ import { getTickets, STATUS_LABELS, PRIORITY_LABELS, TYPE_LABELS } from '../api/
 import TicketDetail from '../components/TicketDetail'
 import './TicketsPage.css'
 
-const STATUS_COLORS = {
-  1: '#3b82f6', 2: '#f59e0b', 3: '#8b5cf6',
-  4: '#6b7280', 5: '#10b981', 6: '#374151',
+const STATUS_SCHEME = {
+  1: { background: '#dbeafe', color: '#1e40af' },
+  2: { background: '#fef3c7', color: '#92400e' },
+  3: { background: '#ede9fe', color: '#5b21b6' },
+  4: { background: '#f1f5f9', color: '#475569' },
+  5: { background: '#d1fae5', color: '#065f46' },
+  6: { background: '#e5e7eb', color: '#374151' },
 }
 
-const PRIORITY_COLORS = {
-  1: '#6b7280', 2: '#3b82f6', 3: '#f59e0b',
-  4: '#ef4444', 5: '#b91c1c', 6: '#7f1d1d',
+const PRIORITY_SCHEME = {
+  1: { background: '#f8fafc', color: '#9ca3af' },
+  2: { background: '#dbeafe', color: '#1e40af' },
+  3: { background: '#fef3c7', color: '#92400e' },
+  4: { background: '#fee2e2', color: '#b91c1c' },
+  5: { background: '#fecaca', color: '#7f1d1d' },
 }
 
-function Badge({ label, color }) {
+function Badge({ label, scheme = {} }) {
+  // v2 peut retourner un objet {id, name} à la place d'un scalaire
+  const text = label !== null && typeof label === 'object'
+    ? (label.name ?? label.id ?? '?')
+    : (label ?? '—')
   return (
-    <span className="badge" style={{ backgroundColor: color }}>
-      {label}
+    <span
+      className="badge"
+      style={{ background: scheme.background ?? '#f1f5f9', color: scheme.color ?? '#374151' }}
+    >
+      {text}
     </span>
   )
 }
 
 function TicketsPage() {
-  const [tickets, setTickets] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  // ID du ticket sélectionné — null = on affiche la liste, sinon on affiche le détail
+  const [tickets, setTickets]   = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState(null)
   const [selectedId, setSelectedId] = useState(null)
 
   useEffect(() => {
@@ -35,27 +48,25 @@ function TicketsPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Si un ticket est sélectionné, on remplace la liste par la vue détail
   if (selectedId !== null) {
-    return (
-      <TicketDetail
-        ticketId={selectedId}
-        onBack={() => setSelectedId(null)}
-      />
-    )
+    return <TicketDetail ticketId={selectedId} onBack={() => setSelectedId(null)} />
   }
 
-  if (loading) return <p className="tickets-loading">Chargement des tickets...</p>
-  if (error)   return <p className="tickets-error">Erreur : {error}</p>
+  if (loading) return <div className="page-state">Chargement des tickets...</div>
+  if (error)   return <div className="page-state page-state--error">Erreur : {error}</div>
 
   return (
-    <div className="tickets-page">
+    <div className="page-wrap">
       <div className="page-header">
-        <h1>Tickets</h1>
-        <span className="page-count">{tickets.length}</span>
+        <div>
+          <p className="page-breadcrumb">Assistance</p>
+          <h1>Tickets</h1>
+        </div>
+        <span className="page-count">{tickets.length} ticket{tickets.length !== 1 ? 's' : ''}</span>
       </div>
-      <div className="tickets-table-wrapper">
-        <table className="tickets-table">
+
+      <div className="table-card">
+        <table className="data-table">
           <thead>
             <tr>
               <th>#</th>
@@ -69,40 +80,35 @@ function TicketsPage() {
           </thead>
           <tbody>
             {tickets.map((ticket) => (
-              // Clic sur une ligne → affiche le détail complet du ticket
               <tr
                 key={ticket.id}
-                className="ticket-row"
+                className="table-row"
                 onClick={() => setSelectedId(ticket.id)}
               >
-                <td>{ticket.id}</td>
+                <td className="id-cell">#{ticket.id}</td>
                 <td className="title-cell">
-                  <span className="ticket-title" title={ticket.name}>
-                    {ticket.name}
-                  </span>
+                  <span className="row-title" title={ticket.name}>{ticket.name}</span>
                 </td>
                 <td>{TYPE_LABELS[ticket.type] ?? ticket.type}</td>
                 <td>
                   <Badge
                     label={STATUS_LABELS[ticket.status] ?? ticket.status}
-                    color={STATUS_COLORS[ticket.status] ?? '#6b7280'}
+                    scheme={STATUS_SCHEME[ticket.status]}
                   />
                 </td>
                 <td>
                   <Badge
                     label={PRIORITY_LABELS[ticket.priority] ?? ticket.priority}
-                    color={PRIORITY_COLORS[ticket.priority] ?? '#6b7280'}
+                    scheme={PRIORITY_SCHEME[ticket.priority]}
                   />
                 </td>
-                <td>{ticket.itilcategories_id || '—'}</td>
-                <td>{new Date(ticket.date).toLocaleDateString('fr-FR')}</td>
+                <td className="muted">{ticket.itilcategories_id || '—'}</td>
+                <td className="muted">{new Date(ticket.date).toLocaleDateString('fr-FR')}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {tickets.length === 0 && (
-          <p className="tickets-empty">Aucun ticket trouvé.</p>
-        )}
+        {tickets.length === 0 && <div className="table-empty">Aucun ticket trouvé.</div>}
       </div>
     </div>
   )
