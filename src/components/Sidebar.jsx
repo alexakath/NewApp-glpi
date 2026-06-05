@@ -1,5 +1,16 @@
 import './Sidebar.css'
 
+function IconDashboard() {
+  return (
+    <svg className="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3"  width="7" height="7" rx="1.5" />
+      <rect x="14" y="3"  width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  )
+}
+
 function IconTickets() {
   return (
     <svg className="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -42,6 +53,12 @@ function IconLogout() {
 }
 
 const MENU_GROUPS = [
+  {
+    module: 'Vue d\'ensemble',
+    items: [
+      { key: 'dashboard', label: 'Tableau de bord', Icon: IconDashboard },
+    ],
+  },
   {
     module: 'Assistance',
     items: [
