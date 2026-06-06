@@ -89,7 +89,7 @@ const parseUserName = (fullName) => {
 // 2. Cherche dans GLPI (existe déjà en base)
 // 3. Crée dans GLPI si introuvable
 
-const upsertDropdown = async (glpiPath, name, registryKey, registry) => {
+const upsertDropdown = async (glpiPath, name, registryKey, registry, extra = {}) => {
   if (!name) return null
   const trimmed = name.trim()
 
@@ -108,10 +108,21 @@ const upsertDropdown = async (glpiPath, name, registryKey, registry) => {
     return id
   }
 
-  const created = await createItem(glpiPath, { name: trimmed })
+  const created = await createItem(glpiPath, { name: trimmed, ...extra })
   const id = Number(created?.id ?? created)
   registry.set(registryKey, trimmed, { id })
   return id
+}
+
+// Visibilité à activer sur chaque État importé — GLPI v2 utilise un objet imbriqué "visibilities"
+const STATE_VISIBILITY = {
+  visibilities: {
+    computer: true, monitor: true, networkequipment: true, peripheral: true,
+    phone: true, printer: true, softwarelicense: true, certificate: true,
+    enclosure: true, pdu: true, line: true, rack: true, softwareversion: true,
+    cluster: true, contract: true, appliance: true, databaseinstance: true,
+    cable: true, unmanaged: true, passivedcequipment: true,
+  },
 }
 
 // ─── Import STATUTS ───────────────────────────────────────────────────────────
@@ -121,7 +132,8 @@ const importStates = async (rows, registry, onProgress) => {
   const results = { success: 0, errors: [] }
   for (let i = 0; i < unique.length; i++) {
     try {
-      await upsertDropdown('Dropdowns/State', unique[i], 'states', registry)
+      const id = await upsertDropdown('Dropdowns/State', unique[i], 'states', registry, STATE_VISIBILITY)
+      if (id) await updateItem('Dropdowns/State', id, STATE_VISIBILITY).catch(() => {})
       results.success++
     } catch (err) {
       results.errors.push({ line: i + 1, message: err.message, row: { Status: unique[i] } })
