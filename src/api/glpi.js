@@ -65,3 +65,29 @@ export const patchSubItem = async (path, id, subPath, subId, body) => {
   )
   return res.data
 }
+
+export const createItem = async (path, body) => {
+  const headers = await getHeaders()
+  const res = await axios.post(`${BASE_URL}/${path}`, body, {
+    headers: { ...headers, 'Content-Type': 'application/json' },
+  })
+  return res.data
+}
+
+export const updateItem = async (path, id, body) => {
+  const headers = await getHeaders()
+  const res = await axios.patch(`${BASE_URL}/${path}/${id}`, body, {
+    headers: { ...headers, 'Content-Type': 'application/json' },
+  })
+  return res.data
+}
+
+export const deleteItem = async (path, id, params = {}) => {
+  const headers = await getHeaders()
+  await axios.delete(`${BASE_URL}/${path}/${id}`, { headers, params })
+}
+
+export const deleteSubItem = async (path, id, subPath, subId) => {
+  const headers = await getHeaders()
+  await axios.delete(`${BASE_URL}/${path}/${id}/${subPath}/${subId}`, { headers })
+}

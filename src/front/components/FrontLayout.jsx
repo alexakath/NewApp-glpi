@@ -16,6 +16,12 @@ function FrontLayout({ children }) {
             >
               Parc informatique
             </NavLink>
+            <NavLink
+              to="/front/tickets"
+              className={({ isActive }) => `fl-nav-link${isActive ? ' active' : ''}`}
+            >
+              Tickets
+            </NavLink>
           </div>
         </div>
       </nav>

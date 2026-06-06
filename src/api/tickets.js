@@ -1,4 +1,4 @@
-import { getItems, getItem, getSubItems } from './glpi'
+import { getItems, getItem, getSubItems, createItem, updateItem, deleteItem } from './glpi'
 
 export const STATUS_LABELS = {
   1: 'Nouveau',
@@ -34,8 +34,28 @@ export const IMPACT_LABELS = {
 // v2 — rôles TeamMember : 1=demandeur, 2=assigné, 3=observateur (identique à v1)
 const ROLE = { REQUESTER: 1, ASSIGNED: 2, OBSERVER: 3 }
 
+// is_deleted: 0 demande à GLPI d'exclure la corbeille côté serveur ;
+// le filtre client est un garde-fou si le paramètre est ignoré par l'API
 export const getTickets = (params = {}) =>
-  getItems('Assistance/Ticket', { sort: 'date_mod', order: 'ASC', ...params })
+  getItems('Assistance/Ticket', { sort: 'date_mod', order: 'ASC', is_deleted: 0, ...params })
+    .then(items => items.filter(t => !t.is_deleted))
+
+export const getTicket     = (id) => getItem('Assistance/Ticket', id)
+// GLPI v2 n'utilise pas de wrapper { input: {...} } — le corps est envoyé directement
+export const createTicket = (data) => createItem('Assistance/Ticket', data)
+export const updateTicket = (id, data) => updateItem('Assistance/Ticket', id, data)
+// force_purge: 1 — suppression définitive (évite que le ticket reste en corbeille et réapparaisse)
+export const deleteTicket = (id) => deleteItem('Assistance/Ticket', id, { force_purge: 1 })
+
+// Item_Ticket n'est pas une sous-ressource de Ticket dans GLPI v2.3 — on passe par l'endpoint direct
+export const getTicketItems = (ticketId) =>
+  getItems('Item_Ticket', { tickets_id: ticketId })
+
+export const addItemToTicket = (ticketId, itemtype, itemsId) =>
+  createItem('Item_Ticket', { tickets_id: ticketId, itemtype, items_id: itemsId })
+
+export const removeItemFromTicket = (ticketId, itemId) =>
+  deleteItem('Item_Ticket', itemId)
 
 export const getTicketFull = async (id) => {
   const [ticket, members] = await Promise.all([
