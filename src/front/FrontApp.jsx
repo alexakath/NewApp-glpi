@@ -5,6 +5,8 @@ import FrontLayout from './components/FrontLayout'
 import FrontHomePage from './pages/FrontHomePage'
 import FrontComputerDetail from './pages/FrontComputerDetail'
 import FrontMonitorDetail from './pages/FrontMonitorDetail'
+import FrontTicketsPage from './pages/FrontTicketsPage'
+import FrontTicketForm from './pages/FrontTicketForm'
 
 const DEFAULT_CODE = import.meta.env.VITE_DEFAULT_CODE ?? ''
 
@@ -26,10 +28,14 @@ function FrontApp() {
   return (
     <FrontLayout>
       <Routes>
-        <Route index                  element={<FrontHomePage />} />
-        <Route path="computers/:id"   element={<FrontComputerDetail />} />
-        <Route path="monitors/:id"    element={<FrontMonitorDetail />} />
-        <Route path="*"               element={<Navigate to="/front" replace />} />
+        <Route index                    element={<FrontHomePage />} />
+        <Route path="computers/:id"     element={<FrontComputerDetail />} />
+        <Route path="monitors/:id"      element={<FrontMonitorDetail />} />
+        {/* Routes tickets — "new" avant ":id/edit" pour éviter toute ambiguïté */}
+        <Route path="tickets"           element={<FrontTicketsPage />} />
+        <Route path="tickets/new"       element={<FrontTicketForm />} />
+        <Route path="tickets/:id/edit"  element={<FrontTicketForm />} />
+        <Route path="*"                 element={<Navigate to="/front" replace />} />
       </Routes>
     </FrontLayout>
   )

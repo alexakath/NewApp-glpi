@@ -10,6 +10,10 @@ export default defineConfig({
         target: 'http://localhost',
         changeOrigin: true,
       },
+      '/apirest.php': {
+        target: 'http://localhost',
+        changeOrigin: true,
+      },
     },
   },
 })
