@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getComputers } from '../api/computers'
-import ComputerDetail from '../components/ComputerDetail'
 import './ComputersPage.css'
 
 function ComputersPage() {
+  const navigate = useNavigate()
   const [computers, setComputers] = useState([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState(null)
-  const [selectedId, setSelectedId] = useState(null)
 
   useEffect(() => {
     getComputers()
@@ -15,10 +15,6 @@ function ComputersPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
-
-  if (selectedId !== null) {
-    return <ComputerDetail computerId={selectedId} onBack={() => setSelectedId(null)} />
-  }
 
   if (loading) return <div className="page-state">Chargement des ordinateurs...</div>
   if (error)   return <div className="page-state page-state--error">Erreur : {error}</div>
@@ -51,7 +47,7 @@ function ComputersPage() {
               <tr
                 key={computer.id}
                 className="table-row"
-                onClick={() => setSelectedId(computer.id)}
+                onClick={() => navigate(`/computers/${computer.id}`)}
               >
                 <td className="id-cell">#{computer.id}</td>
                 <td className="title-cell">

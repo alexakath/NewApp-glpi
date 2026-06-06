@@ -1,3 +1,4 @@
+import { NavLink } from 'react-router-dom'
 import './Sidebar.css'
 
 function IconDashboard() {
@@ -65,26 +66,26 @@ const MENU_GROUPS = [
   {
     module: 'Vue d\'ensemble',
     items: [
-      { key: 'dashboard', label: 'Tableau de bord', Icon: IconDashboard },
+      { to: '/',              label: 'Tableau de bord', Icon: IconDashboard, end: true },
     ],
   },
   {
     module: 'Assistance',
     items: [
-      { key: 'tickets',     label: 'Tickets',         Icon: IconTickets },
-      { key: 'ticketcosts', label: 'Coûts tickets',   Icon: IconCost    },
+      { to: '/tickets',       label: 'Tickets',         Icon: IconTickets },
+      { to: '/tickets/costs', label: 'Coûts tickets',   Icon: IconCost    },
     ],
   },
   {
     module: 'Parc',
     items: [
-      { key: 'computers', label: 'Ordinateurs', Icon: IconComputer },
-      { key: 'monitors',  label: 'Moniteurs',   Icon: IconMonitor  },
+      { to: '/computers', label: 'Ordinateurs', Icon: IconComputer },
+      { to: '/monitors',  label: 'Moniteurs',   Icon: IconMonitor  },
     ],
   },
 ]
 
-function Sidebar({ currentPage, onNavigate, onLogout }) {
+function Sidebar({ onLogout }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -97,15 +98,16 @@ function Sidebar({ currentPage, onNavigate, onLogout }) {
           <div className="sidebar-group" key={group.module}>
             <span className="sidebar-group-label">{group.module}</span>
             <ul className="sidebar-menu">
-              {group.items.map(({ key, label, Icon }) => (
-                <li key={key}>
-                  <button
-                    className={`sidebar-item${currentPage === key ? ' active' : ''}`}
-                    onClick={() => onNavigate(key)}
+              {group.items.map(({ to, label, Icon, end }) => (
+                <li key={to}>
+                  <NavLink
+                    to={to}
+                    end={end}
+                    className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
                   >
                     <Icon />
                     <span>{label}</span>
-                  </button>
+                  </NavLink>
                 </li>
               ))}
             </ul>

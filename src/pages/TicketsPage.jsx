@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getTickets, STATUS_LABELS, PRIORITY_LABELS, TYPE_LABELS } from '../api/tickets'
-import TicketDetail from '../components/TicketDetail'
 import './TicketsPage.css'
 
 const STATUS_SCHEME = {
@@ -36,10 +36,10 @@ function Badge({ label, scheme = {} }) {
 }
 
 function TicketsPage() {
-  const [tickets, setTickets]   = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState(null)
-  const [selectedId, setSelectedId] = useState(null)
+  const navigate = useNavigate()
+  const [tickets, setTickets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState(null)
 
   useEffect(() => {
     getTickets()
@@ -47,10 +47,6 @@ function TicketsPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
-
-  if (selectedId !== null) {
-    return <TicketDetail ticketId={selectedId} onBack={() => setSelectedId(null)} />
-  }
 
   if (loading) return <div className="page-state">Chargement des tickets...</div>
   if (error)   return <div className="page-state page-state--error">Erreur : {error}</div>
@@ -83,7 +79,7 @@ function TicketsPage() {
               <tr
                 key={ticket.id}
                 className="table-row"
-                onClick={() => setSelectedId(ticket.id)}
+                onClick={() => navigate(`/tickets/${ticket.id}`)}
               >
                 <td className="id-cell">#{ticket.id}</td>
                 <td className="title-cell">

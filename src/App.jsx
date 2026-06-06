@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom'
 import { isLoggedIn, logout } from './api/auth'
 import Sidebar from './components/Sidebar'
 import DashboardPage from './pages/DashboardPage'
@@ -7,38 +7,47 @@ import TicketCostsPage from './pages/TicketCostsPage'
 import ComputersPage from './pages/ComputersPage'
 import MonitorsPage from './pages/MonitorsPage'
 import LoginPage from './pages/LoginPage'
+import TicketDetail from './components/TicketDetail'
+import ComputerDetail from './components/ComputerDetail'
+import MonitorDetail from './components/MonitorDetail'
 import './App.css'
 
-const PAGES = {
-  dashboard:    <DashboardPage />,
-  tickets:      <TicketsPage />,
-  ticketcosts:  <TicketCostsPage />,
-  computers:    <ComputersPage />,
-  monitors:     <MonitorsPage />,
-}
+function Layout() {
+  const navigate = useNavigate()
 
-function App() {
-  const [authenticated, setAuthenticated] = useState(isLoggedIn)
-  const [currentPage, setCurrentPage]     = useState('dashboard')
+  if (!isLoggedIn()) return <Navigate to="/login" replace />
 
-  const handleLogin  = () => setAuthenticated(true)
-  const handleLogout = () => { logout(); setAuthenticated(false) }
-
-  if (!authenticated) {
-    return <LoginPage onLogin={handleLogin} />
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
   }
 
   return (
     <div className="app-layout">
-      <Sidebar
-        currentPage={currentPage}
-        onNavigate={setCurrentPage}
-        onLogout={handleLogout}
-      />
+      <Sidebar onLogout={handleLogout} />
       <main className="app-main">
-        {PAGES[currentPage]}
+        <Outlet />
       </main>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<Layout />}>
+        <Route path="/"                element={<DashboardPage />} />
+        <Route path="/tickets"         element={<TicketsPage />} />
+        <Route path="/tickets/:id"     element={<TicketDetail />} />
+        <Route path="/tickets/costs"   element={<TicketCostsPage />} />
+        <Route path="/computers"       element={<ComputersPage />} />
+        <Route path="/computers/:id"   element={<ComputerDetail />} />
+        <Route path="/monitors"        element={<MonitorsPage />} />
+        <Route path="/monitors/:id"    element={<MonitorDetail />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 
