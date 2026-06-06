@@ -3,16 +3,18 @@ import { isLoggedIn, logout } from './api/auth'
 import Sidebar from './components/Sidebar'
 import DashboardPage from './pages/DashboardPage'
 import TicketsPage from './pages/TicketsPage'
+import TicketCostsPage from './pages/TicketCostsPage'
 import ComputersPage from './pages/ComputersPage'
 import MonitorsPage from './pages/MonitorsPage'
 import LoginPage from './pages/LoginPage'
 import './App.css'
 
 const PAGES = {
-  dashboard: <DashboardPage />,
-  tickets:   <TicketsPage />,
-  computers: <ComputersPage />,
-  monitors:  <MonitorsPage />,
+  dashboard:    <DashboardPage />,
+  tickets:      <TicketsPage />,
+  ticketcosts:  <TicketCostsPage />,
+  computers:    <ComputersPage />,
+  monitors:     <MonitorsPage />,
 }
 
 function App() {

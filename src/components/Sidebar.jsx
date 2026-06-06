@@ -32,6 +32,15 @@ function IconComputer() {
   )
 }
 
+function IconCost() {
+  return (
+    <svg className="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 7h6M9 11h6M9 15h4"/>
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+    </svg>
+  )
+}
+
 function IconMonitor() {
   return (
     <svg className="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -62,7 +71,8 @@ const MENU_GROUPS = [
   {
     module: 'Assistance',
     items: [
-      { key: 'tickets', label: 'Tickets', Icon: IconTickets },
+      { key: 'tickets',     label: 'Tickets',         Icon: IconTickets },
+      { key: 'ticketcosts', label: 'Coûts tickets',   Icon: IconCost    },
     ],
   },
   {

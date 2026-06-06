@@ -37,12 +37,31 @@ export const getItem = async (path, id) => {
   return res.data
 }
 
-// subPath : chemin de la sous-ressource, ex: 'Followup' ou 'Disk'
 export const getSubItems = async (path, id, subPath) => {
   const headers = await getHeaders()
   const res = await axios.get(`${BASE_URL}/${path}/${id}/${subPath}`, {
     headers,
     params: { expand_dropdowns: true },
   })
+  return res.data
+}
+
+export const postSubItem = async (path, id, subPath, body) => {
+  const headers = await getHeaders()
+  const res = await axios.post(
+    `${BASE_URL}/${path}/${id}/${subPath}`,
+    body,
+    { headers: { ...headers, 'Content-Type': 'application/json' } }
+  )
+  return res.data
+}
+
+export const patchSubItem = async (path, id, subPath, subId, body) => {
+  const headers = await getHeaders()
+  const res = await axios.patch(
+    `${BASE_URL}/${path}/${id}/${subPath}/${subId}`,
+    body,
+    { headers: { ...headers, 'Content-Type': 'application/json' } }
+  )
   return res.data
 }
