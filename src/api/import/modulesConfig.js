@@ -93,6 +93,7 @@ export const SUB_MODULE_META = {
   monitors:       { label: 'Moniteurs',           color: '#10b981', icon: 'ti-device-desktop', parentModule: 'assets' },
   tickets:        { label: 'Tickets',             color: '#6366f1', icon: 'ti-ticket',         parentModule: 'tickets' },
   ticketCosts:    { label: 'Coûts tickets',       color: '#64748b', icon: 'ti-receipt',        parentModule: 'ticketCosts' },
+  images:         { label: 'Images',              color: '#f97316', icon: 'ti-photo',          parentModule: 'images' },
 }
 
 // Ordre strict d'exécution des sous-modules (dépendances respectées)

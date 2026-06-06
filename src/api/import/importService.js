@@ -1,6 +1,6 @@
 import Papa from 'papaparse'
-import { getItems, createItem, updateItem, postSubItem } from '../glpi'
-import { createV1Item } from '../glpi'
+import JSZip from 'jszip'
+import { getItems, createItem, updateItem, postSubItem, createV1Item, withV1Session, uploadAndLinkDocumentV1 } from '../glpi'
 import { ImportRegistry } from './detectModules'
 import { KNOWN_ITEM_TYPES, TICKET_STATUS_MAP, TICKET_PRIORITY_MAP, TICKET_TYPE_MAP, SUB_MODULE_ORDER, expandModule } from './modulesConfig'
 import { MODULES_CONFIG } from './modulesConfig'
@@ -98,6 +98,7 @@ const upsertDropdown = async (glpiPath, name, registryKey, registry, extra = {})
   // Récupérer tous les items et chercher par nom (filtre client-side — fiable)
   const all = await getItems(glpiPath, { range: '0-999' }).catch(() => [])
   const existing = all.find(item => {
+    if (item.is_deleted) return false
     const n = typeof item.name === 'object' ? (item.name?.name ?? '') : String(item.name ?? '')
     return n.toLowerCase() === trimmed.toLowerCase()
   })
@@ -230,8 +231,8 @@ const importUsers = async (rows, registry, onProgress) => {
 
       // Chercher si un utilisateur avec ce login existe déjà dans GLPI
       const all = await getItems('Administration/User', { range: '0-999' }).catch(() => [])
-      // v2 : le champ login s'appelle "username" (pas "name")
-      const existing = all.find(u => String(u.username ?? u.name ?? '').toLowerCase() === login.toLowerCase())
+      // v2 : le champ login s'appelle "username" (pas "name"), ignorer la corbeille
+      const existing = all.find(u => !u.is_deleted && String(u.username ?? u.name ?? '').toLowerCase() === login.toLowerCase())
 
       if (existing) {
         registry.set('users', fullName, { id: Number(existing.id) })
@@ -290,6 +291,7 @@ const importComputers = async (rows, registry, onProgress) => {
       if (user)     body.user         = userId    ?? undefined
 
       const existing = allExisting.find(c => {
+        if (c.is_deleted) return false
         const n = typeof c.name === 'object' ? (c.name?.name ?? '') : String(c.name ?? '')
         return n.toLowerCase() === name.toLowerCase()
       })
@@ -361,6 +363,7 @@ const importMonitors = async (rows, registry, onProgress) => {
       if (user)     body.user         = registry.get('users',         user)?.id     ?? undefined
 
       const existing = allExisting.find(m => {
+        if (m.is_deleted) return false
         const n = typeof m.name === 'object' ? (m.name?.name ?? '') : String(m.name ?? '')
         return n.toLowerCase() === name.toLowerCase()
       })
@@ -486,6 +489,94 @@ const importTicketCosts = async (rows, registry, onProgress) => {
     }
     onProgress?.(Math.round(((i + 1) / rows.length) * 100), results)
   }
+  return results
+}
+
+// ─── Import IMAGES (ZIP) ──────────────────────────────────────────────────────
+// Extrait les images du ZIP, les mappe aux actifs GLPI par nom de fichier,
+// puis uploade chaque image comme Document v1 et la lie à l'élément.
+
+const SUPPORTED_IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])
+
+const toAssetName = (v) =>
+  (v !== null && typeof v === 'object') ? (v.name ?? '') : String(v ?? '')
+
+export const importImages = async (zipFile, onProgress) => {
+  const results = { success: 0, errors: [], warnings: [] }
+
+  // 1. Extraire le ZIP
+  const zip = await JSZip.loadAsync(zipFile)
+  const imageEntries = Object.values(zip.files).filter(f => {
+    if (f.dir) return false
+    if (f.name.startsWith('__MACOSX/')) return false        // dossier metadata macOS
+    const basename = f.name.split('/').pop()
+    if (basename.startsWith('._')) return false             // resource forks macOS
+    const ext = basename.split('.').pop().toLowerCase()
+    return SUPPORTED_IMAGE_EXTS.has(ext)
+  })
+
+  if (imageEntries.length === 0) {
+    results.warnings.push({ message: 'Aucune image trouvée dans le ZIP' })
+    return results
+  }
+
+  // 2. Récupérer tous les actifs GLPI (Computer + Monitor)
+  const [allComputers, allMonitors] = await Promise.all([
+    getItems('Assets/Computer', { range: '0-999' }).catch(() => []),
+    getItems('Assets/Monitor',  { range: '0-999' }).catch(() => []),
+  ])
+
+  const assetMap = new Map()
+  for (const c of allComputers) {
+    if (!c.is_deleted) {
+      const n = toAssetName(c.name)
+      if (n) assetMap.set(n.toLowerCase(), { id: c.id, itemtype: 'Computer' })
+    }
+  }
+  for (const m of allMonitors) {
+    if (!m.is_deleted) {
+      const n = toAssetName(m.name)
+      if (n) assetMap.set(n.toLowerCase(), { id: m.id, itemtype: 'Monitor' })
+    }
+  }
+
+  // 3. Matcher chaque image à un actif
+  const toUpload = []
+  for (const entry of imageEntries) {
+    const basename  = entry.name.split('/').pop()
+    const dotIdx    = basename.lastIndexOf('.')
+    const ext       = dotIdx > 0 ? basename.slice(dotIdx + 1).toLowerCase() : ''
+    const elemName  = dotIdx > 0 ? basename.slice(0, dotIdx) : basename
+    const asset     = assetMap.get(elemName.toLowerCase())
+
+    if (!asset) {
+      results.warnings.push({ message: `"${elemName}" : aucun élément GLPI trouvé — image ignorée` })
+    } else {
+      toUpload.push({ entry, basename, ext, elemName, asset })
+    }
+  }
+
+  // On signale déjà les warnings et on arrête si rien à uploader
+  onProgress?.(0, results)
+  if (toUpload.length === 0) return results
+
+  // 4. Uploader tout en une seule session v1 (initSession / killSession une fois)
+  await withV1Session(async (headers) => {
+    for (let i = 0; i < toUpload.length; i++) {
+      const { entry, basename, ext, elemName, asset } = toUpload[i]
+      try {
+        const blob     = await entry.async('blob')
+        const mimeType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`
+        const file     = new File([blob], basename, { type: mimeType })
+        await uploadAndLinkDocumentV1(headers, file, asset.itemtype, asset.id)
+        results.success++
+      } catch (err) {
+        results.errors.push({ message: `"${elemName}" : ${err.message}` })
+      }
+      onProgress?.(Math.round(((i + 1) / toUpload.length) * 100), results)
+    }
+  })
+
   return results
 }
 

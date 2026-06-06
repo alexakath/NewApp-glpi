@@ -132,7 +132,7 @@ const V1_BASE = '/apirest.php'
 //   3. Ferme la session  (killSession) — même en cas d'erreur (finally)
 //
 // fn reçoit les headers v1 prêts à l'emploi et doit retourner une Promise.
-const withV1Session = async (fn) => {
+export const withV1Session = async (fn) => {
   // Encode les identifiants en Base64 pour le Basic auth
   const cred = btoa(
     `${import.meta.env.VITE_ADMIN_USERNAME}:${import.meta.env.VITE_DEFAULT_CODE}`
@@ -186,3 +186,23 @@ export const deleteV1Item = (path, id) =>
   withV1Session(headers =>
     axios.delete(`${V1_BASE}/${path}/${id}`, { headers })
   )
+
+// Upload un fichier comme Document GLPI v1 et le lie à un item.
+// headers : headers de session v1 déjà ouverte (Session-Token + App-Token).
+// Ne pas inclure Content-Type — le navigateur le set automatiquement pour multipart.
+export const uploadAndLinkDocumentV1 = async (headers, file, itemtype, itemsId) => {
+  const formData = new FormData()
+  formData.append('uploadManifest', JSON.stringify({ input: { name: file.name, entities_id: 0 } }))
+  formData.append('filename[0]', file, file.name)
+
+  const uploadRes = await axios.post(`${V1_BASE}/Document`, formData, { headers })
+  const docId = uploadRes.data?.id ?? (Array.isArray(uploadRes.data) ? uploadRes.data[0]?.id : null)
+  if (!docId) throw new Error("Upload document échoué — pas d'ID retourné")
+
+  await axios.post(
+    `${V1_BASE}/Document_Item`,
+    { input: { documents_id: Number(docId), itemtype, items_id: Number(itemsId) } },
+    { headers: { ...headers, 'Content-Type': 'application/json' } }
+  )
+  return Number(docId)
+}

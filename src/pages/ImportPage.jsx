@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { parseCsvFile, detectDelimiter, importMultiModule, buildImportPlan } from '../api/import/importService'
+import { parseCsvFile, detectDelimiter, importMultiModule, buildImportPlan, importImages } from '../api/import/importService'
 import { detectModulesFromHeaders } from '../api/import/detectModules'
 import { validateFile } from '../api/import/validateImport'
 import { SUB_MODULE_META, SUB_MODULE_DEPS, SUB_MODULE_ORDER } from '../api/import/modulesConfig'
@@ -79,16 +79,50 @@ const FileCard = ({ entry, onRemove, onDelimiterChange, disabled }) => (
   </div>
 )
 
+// ─── Composant ZipCard ───────────────────────────────────────────────────────
+
+const ZipCard = ({ file, onRemove, disabled }) => (
+  <div className="file-card">
+    <div className="file-card-main">
+      <div className="file-card-icon" style={{ background: '#fff7ed', color: '#f97316' }}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          <line x1="12" y1="12" x2="12" y2="16"/><circle cx="12" cy="18" r=".5" fill="currentColor"/>
+        </svg>
+      </div>
+      <div className="file-card-info">
+        <span className="file-card-name">{file.name}</span>
+        <span className="file-card-meta">{(file.size / (1024 * 1024)).toFixed(1)} MB</span>
+        <div className="file-card-badges">
+          <span className="module-badge" style={{ background: '#fff7ed', color: '#f97316', border: '0.5px solid #f9731644' }}>
+            Images ZIP
+          </span>
+        </div>
+      </div>
+    </div>
+    {!disabled && (
+      <button className="file-card-remove" onClick={onRemove} title="Retirer ce fichier">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    )}
+  </div>
+)
+
 // ─── Page principale ──────────────────────────────────────────────────────────
 
 const ImportPage = () => {
   const [fileEntries, setFileEntries]       = useState([])
+  const [zipFile, setZipFile]               = useState(null)
+  const [zipProgress, setZipProgress]       = useState(0)
   const [fileError, setFileError]           = useState(null)
   const [importing, setImporting]           = useState(false)
   const [subModuleProgress, setSubModuleProgress] = useState({})
   const [subModuleDone, setSubModuleDone]   = useState({})
   const [globalReport, setGlobalReport]     = useState(null)
   const fileInputRef = useRef(null)
+  const zipInputRef  = useRef(null)
 
   // ── Ajout d'un fichier ──────────────────────────────────────────────────────
 
@@ -140,6 +174,18 @@ const ImportPage = () => {
 
   const removeFile = (id) => setFileEntries(prev => prev.filter(e => e.id !== id))
 
+  const handleAddZip = (e) => {
+    const file = e.target.files[0]
+    if (zipInputRef.current) zipInputRef.current.value = ''
+    if (!file) return
+    setFileError(null)
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      setFileError('Le fichier images doit être un .zip')
+      return
+    }
+    setZipFile(file)
+  }
+
   // ── Plan d'import ───────────────────────────────────────────────────────────
 
   const detectedEntries = fileEntries.flatMap(entry =>
@@ -158,7 +204,7 @@ const ImportPage = () => {
   plan.forEach(slot => { subModuleFileMap[slot.subModuleKey] = slot.fileName })
 
   const hasBlockingErrors = fileEntries.some(e => e.validation?.errors?.length > 0)
-  const canImport = !importing && !globalReport && detectedEntries.length > 0 && !hasBlockingErrors
+  const canImport = !importing && !globalReport && (detectedEntries.length > 0 || !!zipFile) && !hasBlockingErrors
 
   // ── Import ──────────────────────────────────────────────────────────────────
 
@@ -166,14 +212,29 @@ const ImportPage = () => {
     setImporting(true)
     setSubModuleProgress({})
     setSubModuleDone({})
+    setZipProgress(0)
     setGlobalReport(null)
 
     try {
-      const report = await importMultiModule(
-        plan,
-        (smk, pct) => setSubModuleProgress(prev => ({ ...prev, [smk]: pct })),
-        (smk, results) => setSubModuleDone(prev => ({ ...prev, [smk]: results }))
-      )
+      let report = {}
+
+      if (plan.length > 0) {
+        report = await importMultiModule(
+          plan,
+          (smk, pct) => setSubModuleProgress(prev => ({ ...prev, [smk]: pct })),
+          (smk, results) => setSubModuleDone(prev => ({ ...prev, [smk]: results }))
+        )
+      }
+
+      if (zipFile) {
+        const imageResults = await importImages(zipFile, (pct, partial) => {
+          setZipProgress(pct)
+          setSubModuleDone(prev => ({ ...prev, images: partial }))
+        })
+        report['images'] = imageResults
+        setSubModuleDone(prev => ({ ...prev, images: imageResults }))
+      }
+
       setGlobalReport(report)
     } catch (err) {
       setGlobalReport({ _error: err.message })
@@ -184,6 +245,8 @@ const ImportPage = () => {
 
   const handleReset = () => {
     setFileEntries([])
+    setZipFile(null)
+    setZipProgress(0)
     setFileError(null)
     setSubModuleProgress({})
     setSubModuleDone({})
@@ -252,6 +315,42 @@ const ImportPage = () => {
         )}
       </div>
 
+      {/* ── Zone 1b : Fichier ZIP images ── */}
+      <div className="import-section">
+        <div className="import-section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h6M3 15h6M15 9h6M15 15h6"/>
+          </svg>
+          Images (optionnel)
+        </div>
+        <p className="import-plan-desc">
+          Un fichier .zip contenant des images nommées d'après les éléments GLPI — chaque image sera jointe comme Document à l'élément correspondant.
+        </p>
+
+        {!zipFile ? (
+          <div className="import-drop-hint" style={{ padding: '1rem 0' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32" style={{ color: '#f97316' }}>
+              <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/>
+            </svg>
+            <span>Aucune archive image ajoutée</span>
+          </div>
+        ) : (
+          <ZipCard file={zipFile} onRemove={() => setZipFile(null)} disabled={importing || !!globalReport} />
+        )}
+
+        {!importing && !globalReport && !zipFile && (
+          <button className="import-add-btn" onClick={() => zipInputRef.current?.click()}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Ajouter une archive images
+            <span className="import-add-hint">.zip</span>
+          </button>
+        )}
+
+        <input ref={zipInputRef} type="file" accept=".zip" style={{ display: 'none' }} onChange={handleAddZip} />
+      </div>
+
       {/* ── Zone 2 : Plan d'import ── */}
       {plan.length > 0 && !globalReport && (
         <div className="import-section">
@@ -296,7 +395,10 @@ const ImportPage = () => {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            {importing ? 'Import en cours...' : `Lancer l'import (${plan.length} étape${plan.length > 1 ? 's' : ''})`}
+            {importing ? 'Import en cours...' : (() => {
+            const stepCount = plan.length + (zipFile ? 1 : 0)
+            return `Lancer l'import (${stepCount} étape${stepCount > 1 ? 's' : ''})`
+          })()}
           </button>
           {!canImport && !importing && fileEntries.length > 0 && (
             <p className="import-launch-hint">
@@ -307,7 +409,7 @@ const ImportPage = () => {
       )}
 
       {/* Barres de progression */}
-      {(importing || globalReport) && plan.length > 0 && (
+      {(importing || globalReport) && (plan.length > 0 || !!zipFile) && (
         <div className="import-section">
           <div className="import-section-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
@@ -317,6 +419,7 @@ const ImportPage = () => {
           </div>
 
           {plan.map(slot => {
+            // Barres de progression CSV (inchangé)
             const meta    = SUB_MODULE_META[slot.subModuleKey] ?? {}
             const pct     = subModuleProgress[slot.subModuleKey] ?? 0
             const done    = subModuleDone[slot.subModuleKey]
@@ -345,6 +448,36 @@ const ImportPage = () => {
               </div>
             )
           })}
+
+          {/* Barre de progression ZIP images */}
+          {zipFile && (() => {
+            const done    = subModuleDone['images']
+            const hasErr  = done?.errors?.length > 0
+            const hasWarn = done?.warnings?.length > 0
+            return (
+              <div className="module-progress-row">
+                <div className="module-progress-header">
+                  <span className="prog-dot" style={{ background: '#f97316' }} />
+                  <span>Images</span>
+                  <span className="prog-source">{zipFile.name}</span>
+                  {done && (
+                    <span className={`prog-result ${hasErr ? 'warn' : 'ok'}`}>
+                      {done.success} ok
+                      {hasErr ? ` · ${done.errors.length} erreur${done.errors.length > 1 ? 's' : ''}` : ''}
+                      {hasWarn ? ` · ${done.warnings.length} warning${done.warnings.length > 1 ? 's' : ''}` : ''}
+                    </span>
+                  )}
+                  {!done && importing && zipProgress > 0 && <span className="prog-pct">{zipProgress}%</span>}
+                </div>
+                <div className="progress-bar-wrapper">
+                  <div className="progress-bar" style={{
+                    width: done ? '100%' : `${zipProgress}%`,
+                    background: done ? (hasErr ? '#f59e0b' : '#22c55e') : undefined,
+                  }} />
+                </div>
+              </div>
+            )
+          })()}
         </div>
       )}
 
