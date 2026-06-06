@@ -1,30 +1,44 @@
-Les coûts d'un ticket dans GLPI
-Un ticket peut avoir plusieurs lignes de coût. Chaque ligne représente une intervention ou une dépense liée à ce ticket.
+## Le principe des coûts de ticket
 
-Ton CSV 3
-Num_Ticket, Duration_second, Time_Cost, Fixed_Cost
-1,          0,               0,         109
-1,          600,             8.7,       50
-Le ticket 1 a 2 lignes de coût.
+Un ticket GLPI représente une **intervention** (une panne, une demande, etc.). Les coûts permettent de répondre à la question : **"Combien cette intervention a-t-elle coûté à l'entreprise ?"**
 
-Ce que signifie chaque champ
-Duration_second — le temps passé sur l'intervention
-0   → technicien n'a pas encore travaillé dessus
-600 → technicien a travaillé 10 minutes
-Time_Cost — le coût horaire du technicien (€/heure)
-0   → gratuit / non renseigné
-8.7 → 8,70€ par heure
-Fixed_Cost — coût fixe indépendant du temps
-109€ → ex: pièce achetée, déplacement...
-50€  → ex: autre frais fixe
+---
 
-Le coût total d'une ligne
-Coût total = (Duration_second / 3600 × Time_Cost) + Fixed_Cost
+### Les 3 composantes d'un coût
 
-Ligne 1 : (0 / 3600 × 0) + 109     = 109€
-Ligne 2 : (600 / 3600 × 8.7) + 50  = 1.45 + 50 = 51.45€
+**1. La durée**
+Le temps passé sur l'intervention. Ex : un technicien a travaillé 1h30 sur le problème.
 
-Total ticket 1 : 109 + 51.45 = 160.45€
+**2. Le coût horaire (€/h)**
+Le tarif de la main d'œuvre. Ex : ce technicien coûte 50 €/h à l'entreprise.
 
-Ce que tu afficheras dans la fiche ticket
-DuréeCoût/hCoût fixeTotal ligne0h000€109€109€0h108,70€50€51,45€Total160,45€
+**3. Le coût fixe (€)**
+Une dépense unique indépendante du temps. Ex : une pièce achetée, un déplacement, une licence logicielle.
+
+---
+
+### La formule
+
+```
+Total d'une ligne = (durée en heures × coût horaire) + coût fixe
+```
+
+---
+
+### Exemple concret
+
+Imaginez un technicien qui intervient pour réparer un ordinateur :
+
+| Ce qu'il fait | Durée | Coût/h | Coût fixe | Total |
+|---|---|---|---|---|
+| Main d'œuvre | 2h00 | 50 €/h | 0 € | **100 €** |
+| Pièce de rechange achetée | 0h00 | 0 €/h | 35 € | **35 €** |
+| **Total du ticket** | | | | **135 €** |
+
+La pièce n'a pas de durée — c'est un achat, donc coût fixe. Le travail du technicien n'a pas de coût fixe — c'est du temps facturé à l'heure.
+
+---
+
+### Pourquoi plusieurs lignes ?
+
+Parce qu'une intervention peut avoir **plusieurs natures de dépenses** en même temps. Vous pouvez en ajouter autant que nécessaire, et GLPI/NewApp additionne tout pour donner le coût total du ticket.
