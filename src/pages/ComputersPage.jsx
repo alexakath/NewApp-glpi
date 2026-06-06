@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { getComputers } from '../api/computers'
 import './ComputersPage.css'
 
+// expand_dropdowns peut retourner un string ou un objet {id,name}
+const dd = (val) => (val !== null && typeof val === 'object') ? (val.name ?? val.id ?? null) : (val || null)
+
 function ComputersPage() {
   const navigate = useNavigate()
   const [computers, setComputers] = useState([])
@@ -35,8 +38,8 @@ function ComputersPage() {
             <tr>
               <th>#</th>
               <th>Nom</th>
-              <th>Numéro de série</th>
-              <th>Système d'exploitation</th>
+              <th>N° inventaire</th>
+              <th>Fabricant</th>
               <th>Localisation</th>
               <th>État</th>
               <th>Entité</th>
@@ -53,16 +56,16 @@ function ComputersPage() {
                 <td className="title-cell">
                   <span className="row-title" title={computer.name}>{computer.name}</span>
                 </td>
-                <td className="muted">{computer.serial || '—'}</td>
-                <td className="muted">{computer.operatingsystems_id || '—'}</td>
-                <td className="muted">{computer.locations_id || '—'}</td>
+                <td className="muted">{computer.otherserial || computer.serial || '—'}</td>
+                <td className="muted">{dd(computer.manufacturer) || '—'}</td>
+                <td className="muted">{dd(computer.location) || '—'}</td>
                 <td>
-                  {computer.states_id
-                    ? <span className="state-pill">{computer.states_id}</span>
+                  {dd(computer.status)
+                    ? <span className="state-pill">{dd(computer.status)}</span>
                     : <span className="muted">—</span>
                   }
                 </td>
-                <td className="muted">{computer.entities_id || '—'}</td>
+                <td className="muted">{dd(computer.entity) || '—'}</td>
               </tr>
             ))}
           </tbody>
