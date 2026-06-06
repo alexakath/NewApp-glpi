@@ -4,13 +4,18 @@ import useAssets from '../hooks/useAssets'
 import { IcoComputer, IcoMonitor, IcoSearch, IcoFilter, IcoX, IcoRefresh, IcoEmpty, IcoPin, IcoHash } from '../icons'
 import './FrontHomePage.css'
 
+const dd = (v) => (v !== null && typeof v === 'object') ? (v.name ?? v.id ?? null) : (v ?? null)
+
 // ── Carte d'un équipement ──────────────────────────────────────────────────
-function AssetCard({ type, name, serial, os, size, location, status, onClick }) {
+function AssetCard({ type, name, serial, os, size, location, status, imageUrl, onClick }) {
   const isComputer = type === 'computer'
   return (
     <div className={`fh-card fh-card--${type}`} onClick={onClick}>
       <div className="fh-card-img">
-        {isComputer ? <IcoComputer /> : <IcoMonitor />}
+        {imageUrl
+          ? <img src={imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+          : (isComputer ? <IcoComputer /> : <IcoMonitor />)
+        }
       </div>
       <div className="fh-card-body">
         <span className="fh-card-type">{isComputer ? 'Ordinateur' : 'Moniteur'}</span>
@@ -29,7 +34,7 @@ function AssetCard({ type, name, serial, os, size, location, status, onClick }) 
 // ── Page principale ────────────────────────────────────────────────────────
 function FrontHomePage() {
   const navigate = useNavigate()
-  const { computers, monitors, loading, error } = useAssets()
+  const { computers, monitors, imageMap, loading, error } = useAssets()
 
   // États des filtres séparés
   const [searchName,      setSearchName]      = useState('')
@@ -52,21 +57,23 @@ function FrontHomePage() {
   const allAssets = useMemo(() => [
     ...computers.map(c => ({
       id:       c.id,
+      itemtype: 'Computer',
       type:     'computer',
       name:     c.name,
       serial:   c.serial,
-      os:       c.operatingsystems_id,
-      location: c.locations_id,
-      status:   c.states_id,
+      os:       dd(c.operatingsystem),
+      location: dd(c.location),
+      status:   dd(c.status),
     })),
     ...monitors.map(m => ({
       id:       m.id,
+      itemtype: 'Monitor',
       type:     'monitor',
       name:     m.name,
       serial:   m.serial,
       size:     m.size > 0 ? `${m.size}"` : null,
-      location: m.location?.name,
-      status:   m.status?.name,
+      location: dd(m.location),
+      status:   dd(m.status),
     })),
   ], [computers, monitors])
 
@@ -197,6 +204,7 @@ function FrontHomePage() {
             <AssetCard
               key={`${a.type}-${a.id}`}
               {...a}
+              imageUrl={imageMap.get(`${a.itemtype}-${a.id}`)}
               onClick={() => navigate(`/front/${a.type}s/${a.id}`)}
             />
           ))}

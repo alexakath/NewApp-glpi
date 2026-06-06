@@ -199,6 +199,19 @@ export const uploadAndLinkDocumentV1 = async (headers, file, itemtype, itemsId) 
   const docId = uploadRes.data?.id ?? (Array.isArray(uploadRes.data) ? uploadRes.data[0]?.id : null)
   if (!docId) throw new Error("Upload document échoué — pas d'ID retourné")
 
+  // GLPI peut créer l'entrée en base sans stocker le fichier si le format n'est pas
+  // dans la liste blanche (Configuration > Types de documents). On vérifie filepath.
+  const verify = await axios.get(`${V1_BASE}/Document/${docId}`, { headers }).catch(() => null)
+  if (verify?.data && !verify.data.filepath) {
+    // Supprimer le record orphelin pour ne pas polluer GLPI
+    await axios.delete(`${V1_BASE}/Document/${docId}`, { headers }).catch(() => {})
+    const ext = file.name.split('.').pop() || file.type
+    throw new Error(
+      `Fichier refusé par GLPI — type "${ext}" absent de la liste blanche ` +
+      `(GLPI > Configuration > Types de documents)`
+    )
+  }
+
   await axios.post(
     `${V1_BASE}/Document_Item`,
     { input: { documents_id: Number(docId), itemtype, items_id: Number(itemsId) } },

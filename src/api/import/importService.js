@@ -501,6 +501,31 @@ const SUPPORTED_IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'
 const toAssetName = (v) =>
   (v !== null && typeof v === 'object') ? (v.name ?? '') : String(v ?? '')
 
+// Convertit un blob image en JPEG via canvas (contourne la liste blanche GLPI qui bloque PNG etc.)
+const toJpegFile = (blob, originalName) =>
+  new Promise((resolve) => {
+    const url = URL.createObjectURL(blob)
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      canvas.getContext('2d').drawImage(img, 0, 0)
+      canvas.toBlob(
+        jpegBlob => {
+          URL.revokeObjectURL(url)
+          if (!jpegBlob) { resolve(null); return }
+          const jpegName = originalName.replace(/\.(png|gif|bmp|webp)$/i, '.jpg')
+          resolve(new File([jpegBlob], jpegName, { type: 'image/jpeg' }))
+        },
+        'image/jpeg',
+        0.92
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null) }
+    img.src = url
+  })
+
 export const importImages = async (zipFile, onProgress) => {
   const results = { success: 0, errors: [], warnings: [] }
 
@@ -565,9 +590,15 @@ export const importImages = async (zipFile, onProgress) => {
     for (let i = 0; i < toUpload.length; i++) {
       const { entry, basename, ext, elemName, asset } = toUpload[i]
       try {
-        const blob     = await entry.async('blob')
-        const mimeType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`
-        const file     = new File([blob], basename, { type: mimeType })
+        const blob = await entry.async('blob')
+        let file
+        if (ext === 'jpg' || ext === 'jpeg') {
+          file = new File([blob], basename, { type: 'image/jpeg' })
+        } else {
+          // Convertir en JPEG : GLPI n'accepte généralement que JPEG/PNG selon sa config
+          // La conversion garantit l'upload même si PNG n'est pas dans la liste blanche
+          file = (await toJpegFile(blob, basename)) ?? new File([blob], basename, { type: `image/${ext}` })
+        }
         await uploadAndLinkDocumentV1(headers, file, asset.itemtype, asset.id)
         results.success++
       } catch (err) {
