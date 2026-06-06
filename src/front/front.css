@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+/* Variables scoped au front-office — n'interfèrent pas avec le backoffice */
+.fl-shell {
+  --f-accent:      #2563eb;
+  --f-accent-dark: #1d4ed8;
+  --f-accent-soft: #eff6ff;
+  --f-purple:      #7c3aed;
+  --f-purple-soft: #f5f3ff;
+  --f-green:       #10b981;
+  --f-red:         #ef4444;
+  --f-text:        #0f172a;
+  --f-muted:       #64748b;
+  --f-light:       #94a3b8;
+  --f-border:      #e2e8f0;
+  --f-bg:          #f1f5f9;
+  --f-surface:     #ffffff;
+  --f-radius:      12px;
+  --f-radius-sm:   8px;
+  --f-font:        'DM Sans', system-ui, sans-serif;
+  --f-mono:        'DM Mono', monospace;
+  --f-nav-h:       60px;
+
+  font-family: var(--f-font);
+}

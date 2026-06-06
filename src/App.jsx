@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage'
 import TicketDetail from './components/TicketDetail'
 import ComputerDetail from './components/ComputerDetail'
 import MonitorDetail from './components/MonitorDetail'
+import FrontApp from './front/FrontApp'
 import './App.css'
 
 function Layout() {
@@ -35,7 +36,8 @@ function Layout() {
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login"    element={<LoginPage />} />
+      <Route path="/front/*"  element={<FrontApp />} />
       <Route element={<Layout />}>
         <Route path="/"                element={<DashboardPage />} />
         <Route path="/tickets"         element={<TicketsPage />} />
