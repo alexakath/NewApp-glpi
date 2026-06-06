@@ -1,0 +1,80 @@
+.fl-shell {
+  flex: 1;
+  min-height: 100svh;
+  background: var(--f-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Navbar ── */
+.fl-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: var(--f-nav-h);
+  background: var(--f-surface);
+  border-bottom: 1px solid var(--f-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.fl-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.fl-logo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--f-text);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Petit point bleu avant le logo */
+.fl-logo::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--f-accent);
+}
+
+.fl-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fl-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--f-radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--f-muted);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.fl-nav-link:hover { background: var(--f-bg); color: var(--f-text); }
+.fl-nav-link.active { background: var(--f-accent-soft); color: var(--f-accent); font-weight: 600; }
+
+/* ── Main ── */
+.fl-main {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+}

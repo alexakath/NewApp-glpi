@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { login } from '../api/auth'
+import { useNavigate, Navigate } from 'react-router-dom'
+import { login, isLoggedIn } from '../api/auth'
 import './LoginPage.css'
 
-// Code pré-rempli depuis .env — l'admin arrive, c'est déjà là, il clique juste
 const DEFAULT_CODE = import.meta.env.VITE_DEFAULT_CODE ?? ''
 
-function LoginPage({ onLogin }) {
+function LoginPage() {
+  const navigate = useNavigate()
   const [code, setCode]       = useState(DEFAULT_CODE)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
+
+  if (isLoggedIn()) return <Navigate to="/" replace />
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -16,7 +19,7 @@ function LoginPage({ onLogin }) {
     setError(null)
     try {
       await login(code)
-      onLogin()
+      navigate('/')
     } catch (err) {
       const data = err.response?.data
       setError(

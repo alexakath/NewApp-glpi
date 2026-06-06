@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getMonitors } from '../api/monitors'
-import MonitorDetail from '../components/MonitorDetail'
 import './MonitorsPage.css'
 
 // v2 retourne des objets {id, name} pour les champs relationnels
 const n = (obj) => obj?.name || '—'
 
 function MonitorsPage() {
-  const [monitors, setMonitors]   = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState(null)
-  const [selectedId, setSelectedId] = useState(null)
+  const navigate = useNavigate()
+  const [monitors, setMonitors] = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState(null)
 
   useEffect(() => {
     getMonitors()
@@ -18,10 +18,6 @@ function MonitorsPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
-
-  if (selectedId !== null) {
-    return <MonitorDetail monitorId={selectedId} onBack={() => setSelectedId(null)} />
-  }
 
   if (loading) return <div className="page-state">Chargement des moniteurs...</div>
   if (error)   return <div className="page-state page-state--error">Erreur : {error}</div>
@@ -54,7 +50,7 @@ function MonitorsPage() {
               <tr
                 key={monitor.id}
                 className="table-row"
-                onClick={() => setSelectedId(monitor.id)}
+                onClick={() => navigate(`/monitors/${monitor.id}`)}
               >
                 <td className="id-cell">#{monitor.id}</td>
                 <td className="title-cell">

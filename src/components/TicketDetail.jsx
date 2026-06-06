@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { getTicketFull, STATUS_LABELS, PRIORITY_LABELS, TYPE_LABELS, URGENCY_LABELS, IMPACT_LABELS } from '../api/tickets'
 import { getTicketCosts } from '../api/costs'
 import { getSubItems } from '../api/glpi'
@@ -56,7 +57,9 @@ function Row({ label, value }) {
   )
 }
 
-function TicketDetail({ ticketId, onBack }) {
+function TicketDetail() {
+  const { id: ticketId } = useParams()
+  const navigate = useNavigate()
   const [ticket, setTicket]   = useState(null)
   const [costs, setCosts]     = useState([])
   const [items, setItems]     = useState([])
@@ -93,7 +96,7 @@ function TicketDetail({ ticketId, onBack }) {
 
   return (
     <div className="detail-wrap">
-      <button className="back-btn" onClick={onBack}>
+      <button className="back-btn" onClick={() => navigate('/tickets')}>
         <svg viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd"/>
         </svg>
