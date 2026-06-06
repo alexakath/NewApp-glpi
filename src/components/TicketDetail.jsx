@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getTicketFull, STATUS_LABELS, PRIORITY_LABELS, TYPE_LABELS, URGENCY_LABELS, IMPACT_LABELS } from '../api/tickets'
+import { getTicketFull, getTicketItems, STATUS_LABELS, PRIORITY_LABELS, TYPE_LABELS, URGENCY_LABELS, IMPACT_LABELS } from '../api/tickets'
 import { getTicketCosts } from '../api/costs'
-import { getSubItems } from '../api/glpi'
+import { getItem } from '../api/glpi'
 import './TicketDetail.css'
 
 const STATUS_SCHEME = {
@@ -67,20 +67,61 @@ function TicketDetail() {
   const [error, setError]     = useState(null)
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
-    Promise.all([
-      getTicketFull(ticketId),
-      getTicketCosts(ticketId).catch(() => []),
-      getSubItems('Assistance/Ticket', ticketId, 'Item').catch(() => []),
-    ])
-      .then(([t, c, i]) => {
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        // Chargement en parallèle des trois sources de données.
+        // getTicketItems utilise l'API v1, les deux autres utilisent v2.
+        // .catch(() => []) sur costs et items : une erreur partielle
+        // ne bloque pas l'affichage du ticket principal.
+        const [t, c, itemLinks] = await Promise.all([
+          getTicketFull(ticketId),                  // v2 : ticket + membres
+          getTicketCosts(ticketId).catch(() => []),  // v2 : coûts
+          getTicketItems(ticketId).catch(() => []),  // v1 : liens Item_Ticket
+        ])
         setTicket(t)
         setCosts(Array.isArray(c) ? c : [])
-        setItems(Array.isArray(i) ? i : [])
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
+
+        // itemLinks = [{ id, itemtype: "Computer", items_id: 3, tickets_id: 1 }, ...]
+        // Ce sont seulement des LIENS — pas encore les noms ni les serials.
+        const links = Array.isArray(itemLinks) ? itemLinks : []
+        if (links.length === 0) { setItems([]); return }
+
+        // Enrichissement via v2 : pour chaque lien, on va chercher le détail
+        // de l'actif (nom, serial) dans /Assets/Computer/{id} ou /Assets/Monitor/{id}.
+        // Promise.allSettled : si un actif échoue, les autres s'affichent quand même.
+        const enriched = await Promise.allSettled(
+          links.map(link => {
+            // Si _name est déjà là (cas où v1 aurait fourni le nom), on évite l'appel
+            if (link._name != null) return Promise.resolve(link)
+
+            // items_id est un entier brut depuis v1 (expand_dropdowns désactivé)
+            const rawId = typeof link.items_id === 'object' ? link.items_id?.id : link.items_id
+
+            // Chemin v2 selon le type d'actif
+            const path  = link.itemtype === 'Computer' ? 'Assets/Computer'
+                        : link.itemtype === 'Monitor'  ? 'Assets/Monitor'
+                        : null
+
+            if (!path || !rawId) return Promise.resolve(link)
+
+            // Appel v2 pour obtenir le nom et le numéro de série
+            return getItem(path, rawId)
+              .then(asset => ({ ...link, _name: asset.name, _serial: asset.serial }))
+              .catch(() => link)   // en cas d'échec, on garde le lien sans nom
+          })
+        )
+
+        // flatMap : on garde seulement les résultats réussis (fulfilled)
+        setItems(enriched.flatMap(r => r.status === 'fulfilled' ? [r.value] : []))
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [ticketId])
 
   if (loading) return <div className="page-state">Chargement du ticket...</div>
@@ -141,15 +182,23 @@ function TicketDetail() {
       {items.length > 0 && (
         <div className="detail-section">
           <h3>Éléments associés</h3>
-          {items.map((item, i) => (
-            <div key={item.id ?? i} className="detail-row">
-              <span className="detail-label">{item.itemtype ?? 'Actif'}</span>
-              <span className="detail-value">
-                {item.name ?? item.items_id ?? '—'}
-                {item.serial ? <span className="td-item-serial"> — {item.serial}</span> : null}
-              </span>
-            </div>
-          ))}
+          {items.map((item, i) => {
+            const name = item._name
+              ?? (typeof item.items_id === 'object' ? item.items_id?.name : null)
+              ?? `#${typeof item.items_id === 'object' ? item.items_id?.id : item.items_id}`
+            const typeLabel = item.itemtype === 'Computer' ? 'Ordinateur'
+                            : item.itemtype === 'Monitor'  ? 'Moniteur'
+                            : (item.itemtype ?? 'Actif')
+            return (
+              <div key={item.id ?? i} className="detail-row">
+                <span className="detail-label">{typeLabel}</span>
+                <span className="detail-value">
+                  {name}
+                  {item._serial ? <span className="td-item-serial"> — {item._serial}</span> : null}
+                </span>
+              </div>
+            )
+          })}
         </div>
       )}
 
