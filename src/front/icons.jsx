@@ -20,6 +20,15 @@ export const IcoMonitor = () => (
   </svg>
 )
 
+export const IcoAsset = () => (
+  <svg {...p} strokeWidth="1.75">
+    <rect x="4" y="4" width="16" height="16" rx="2"/>
+    <line x1="9" y1="9" x2="15" y2="9"/>
+    <line x1="9" y1="13" x2="15" y2="13"/>
+    <line x1="9" y1="17" x2="13" y2="17"/>
+  </svg>
+)
+
 export const IcoSearch = () => (
   <svg {...p} strokeWidth="2">
     <circle cx="11" cy="11" r="8"/>

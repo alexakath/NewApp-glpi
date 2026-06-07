@@ -5,6 +5,7 @@ import FrontLayout from './components/FrontLayout'
 import FrontHomePage from './pages/FrontHomePage'
 import FrontComputerDetail from './pages/FrontComputerDetail'
 import FrontMonitorDetail from './pages/FrontMonitorDetail'
+import FrontAssetDetail from './pages/FrontAssetDetail'
 import FrontTicketsPage from './pages/FrontTicketsPage'
 import FrontTicketForm from './pages/FrontTicketForm'
 
@@ -31,6 +32,7 @@ function FrontApp() {
         <Route index                    element={<FrontHomePage />} />
         <Route path="computers/:id"     element={<FrontComputerDetail />} />
         <Route path="monitors/:id"      element={<FrontMonitorDetail />} />
+        <Route path="assets/:itemtype/:id" element={<FrontAssetDetail />} />
         {/* Routes tickets — "new" avant ":id/edit" pour éviter toute ambiguïté */}
         <Route path="tickets"           element={<FrontTicketsPage />} />
         <Route path="tickets/new"       element={<FrontTicketForm />} />
