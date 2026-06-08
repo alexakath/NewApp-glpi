@@ -1,0 +1,374 @@
+.reset-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.reset-page--loading {
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+/* ── En-tête ─────────────────────────────────────────────────────────────── */
+
+.reset-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.reset-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.reset-header h1 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.2rem;
+}
+
+.reset-header p {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── Repère d'étape ──────────────────────────────────────────────────────── */
+
+.reset-steps {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.reset-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.reset-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: background 0.2s, color 0.2s;
+}
+
+.reset-step.is-active { color: #0f172a; }
+.reset-step.is-active .reset-step-num { background: #dc2626; color: #fff; }
+
+.reset-step.is-done { color: #16a34a; }
+.reset-step.is-done .reset-step-num { background: #dcfce7; color: #16a34a; }
+
+.reset-step-sep {
+  width: 28px;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+/* ── Bandeau d'info ──────────────────────────────────────────────────────── */
+
+.reset-info-banner--danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+.reset-info-banner--danger p { color: #991b1b; }
+
+.reset-info-banner--success {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+.reset-info-banner--success p { color: #166534; }
+
+.reset-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.9rem 1.1rem;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  color: #1d4ed8;
+}
+.reset-info-banner svg { flex-shrink: 0; margin-top: 1px; }
+.reset-info-banner p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: #1e40af;
+}
+.reset-info-banner code {
+  background: #dbeafe;
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.74rem;
+  font-family: var(--f-mono, ui-monospace, monospace);
+}
+
+/* ── Liste des modules ───────────────────────────────────────────────────── */
+
+.reset-modules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* ── Barre d'action ──────────────────────────────────────────────────────── */
+
+.reset-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid #e8ecf2;
+  border-radius: 12px;
+  padding: 1.1rem 1.3rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  bottom: 1rem;
+  z-index: 5;
+}
+.reset-action-bar--danger { border-color: #fecaca; }
+
+.reset-action-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.reset-action-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 0.5px solid #fecaca;
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+}
+
+.reset-action-total {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #dc2626;
+  font-variant-numeric: tabular-nums;
+}
+
+.reset-action-label {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.reset-action-sub {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+.btn-reset-all,
+.btn-reset-trash,
+.btn-reset-restart {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 42px;
+  padding: 0 1.4rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.btn-reset-all {
+  background: #dc2626;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+}
+.btn-reset-all:hover:not(:disabled) { background: #b91c1c; box-shadow: 0 4px 10px rgba(220, 38, 38, 0.32); }
+
+.btn-reset-trash {
+  background: #f59e0b;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25);
+}
+.btn-reset-trash:hover:not(:disabled) { background: #d97706; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.32); }
+
+.btn-reset-restart {
+  background: #fff;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  align-self: flex-start;
+}
+.btn-reset-restart:hover { background: #f8fafc; }
+
+.btn-reset-all:active:not(:disabled),
+.btn-reset-trash:active:not(:disabled) { transform: translateY(1px); }
+
+.btn-reset-all:disabled,
+.btn-reset-trash:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Modale de confirmation ──────────────────────────────────────────────── */
+
+.reset-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.reset-modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.6rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.reset-modal h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.reset-modal p {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.5;
+}
+.reset-modal p strong { color: #0f172a; }
+
+.reset-modal-hint strong { color: #dc2626; }
+
+.reset-modal-input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  outline: none;
+  margin: 0.4rem 0 1.2rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.reset-modal-input:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.reset-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.btn-cancel {
+  height: 38px;
+  padding: 0 1.1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-cancel:hover { background: #f8fafc; }
+
+.btn-confirm-delete,
+.btn-confirm-trash {
+  height: 38px;
+  padding: 0 1.2rem;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-confirm-delete { background: #dc2626; }
+.btn-confirm-delete:hover:not(:disabled) { background: #b91c1c; }
+.btn-confirm-delete:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+}
+
+.btn-confirm-trash { background: #f59e0b; }
+.btn-confirm-trash:hover:not(:disabled) { background: #d97706; }
+
+/* ── Résultat ────────────────────────────────────────────────────────────── */
+
+.reset-result {
+  background: #fff;
+  border: 1px solid #e8ecf2;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.reset-result h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.reset-result-list { font-size: 0.82rem; }
+.reset-result-list strong { display: block; margin-bottom: 0.35rem; }
+.reset-result-list ul { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.2rem; }
+
+.reset-result-list--success strong { color: #16a34a; }
+.reset-result-list--success li     { color: #166534; }
+
+.reset-result-list--error strong { color: #dc2626; }
+.reset-result-list--error li     { color: #991b1b; }

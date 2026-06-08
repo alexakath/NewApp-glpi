@@ -171,6 +171,14 @@ export const getV1SubItems = (path, id, subPath, params = {}) =>
     }).then(res => Array.isArray(res.data) ? res.data : [])
   )
 
+// Récupère tous les items d'un type via l'API v1 — pour les itemtypes absents
+// de la v2 (ex: Document, confirmé "ERROR_ITEM_NOT_FOUND" via /api.php/v2.3/Document)
+export const getV1Items = (path, params = {}) =>
+  withV1Session(headers =>
+    axios.get(`${V1_BASE}/${path}`, { headers, params })
+      .then(res => Array.isArray(res.data) ? res.data : [])
+  )
+
 // Crée un item via l'API v1.
 // IMPORTANT : la v1 exige un wrapper { input: {...} } autour du body,
 // contrairement à la v2 qui reçoit le body directement.
@@ -182,9 +190,11 @@ export const createV1Item = (path, body) =>
   )
 
 // Supprime un item par son ID via l'API v1.
-export const deleteV1Item = (path, id) =>
+// params permet de passer force_purge: true pour une suppression définitive
+// (sinon l'item passe simplement à la corbeille, comme en v2)
+export const deleteV1Item = (path, id, params = {}) =>
   withV1Session(headers =>
-    axios.delete(`${V1_BASE}/${path}/${id}`, { headers })
+    axios.delete(`${V1_BASE}/${path}/${id}`, { headers, params })
   )
 
 // Upload un fichier comme Document GLPI v1 et le lie à un item.
