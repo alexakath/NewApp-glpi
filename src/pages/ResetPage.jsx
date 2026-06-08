@@ -28,6 +28,9 @@ const ResetPage = () => {
   const [confirmText,     setConfirmText]     = useState('')
   const [trashSummary,    setTrashSummary]    = useState(null)
   const [purgeResult,     setPurgeResult]     = useState(null)
+  // Avancement en temps réel de l'opération en cours — alimenté par le
+  // callback onProgress des fonctions de service, module par module.
+  const [progress,        setProgress]        = useState({ done: 0, total: 0, label: '' })
 
   const loadStats = async (initSelection = false) => {
     setLoadingStats(true)
@@ -78,10 +81,20 @@ const ResetPage = () => {
     return map
   }
 
+  // Pousse l'avancement courant vers la barre de progression et fait
+  // transitionner la ligne du module concerné de "loading" vers son état final
+  // — au fil de l'eau plutôt qu'en bloc à la toute fin, pour un retour visuel
+  // qui colle au rythme réel des appels API (un module = un palier).
+  const handleProgress = ({ done, total, module, label, status }) => {
+    setProgress({ done, total, label })
+    setStatusPerModule((prev) => ({ ...prev, [module]: status === 'skipped' ? null : status }))
+  }
+
   // ── Étape 1 : mise à la corbeille ──────────────────────────────────────────
   const handleTrash = async () => {
     setPendingAction(null)
     setIsProcessing(true)
+    setProgress({ done: 0, total: targetModules.length, label: '' })
     setStatusPerModule(() => {
       const initial = {}
       targetModules.forEach((key) => { initial[key] = 'loading' })
@@ -89,12 +102,7 @@ const ResetPage = () => {
     })
 
     try {
-      const result = await trashAllSelected(buildSelectedMap())
-      const newStatuses = {}
-      result.success.forEach((item) => { newStatuses[item.module] = 'success' })
-      result.errors.forEach((item)  => { newStatuses[item.module] = 'error'   })
-      result.skipped.forEach((item) => { newStatuses[item.module] = null      })
-      setStatusPerModule(newStatuses)
+      const result = await trashAllSelected(buildSelectedMap(), handleProgress)
       setTrashSummary(result)
       await loadStats(false)
       setStep('review-purge')
@@ -103,6 +111,7 @@ const ResetPage = () => {
       alert("Une erreur grave est survenue pendant la mise à la corbeille.")
     } finally {
       setIsProcessing(false)
+      setProgress({ done: 0, total: 0, label: '' })
     }
   }
 
@@ -110,6 +119,7 @@ const ResetPage = () => {
   const handlePurge = async () => {
     setPendingAction(null)
     setIsProcessing(true)
+    setProgress({ done: 0, total: targetModules.length, label: '' })
     setStatusPerModule(() => {
       const initial = {}
       targetModules.forEach((key) => { initial[key] = 'loading' })
@@ -117,11 +127,7 @@ const ResetPage = () => {
     })
 
     try {
-      const result = await purgeAllSelected(buildSelectedMap())
-      const newStatuses = {}
-      result.success.forEach((item) => { newStatuses[item.module] = 'success' })
-      result.errors.forEach((item)  => { newStatuses[item.module] = 'error'   })
-      setStatusPerModule(newStatuses)
+      const result = await purgeAllSelected(buildSelectedMap(), handleProgress)
       setPurgeResult(result)
       await loadStats(false)
       setStep('done')
@@ -130,8 +136,11 @@ const ResetPage = () => {
       alert('Une erreur grave est survenue pendant la suppression définitive.')
     } finally {
       setIsProcessing(false)
+      setProgress({ done: 0, total: 0, label: '' })
     }
   }
+
+  const progressPct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0
 
   const confirmPurgeEnabled = confirmText.trim().toUpperCase() === 'SUPPRIMER'
 
@@ -147,32 +156,49 @@ const ResetPage = () => {
 
   return (
     <div className="reset-page">
-      {/* En-tête */}
-      <div className="reset-header">
-        <div className="reset-header-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-            <path d="M10 11v6" />
-            <path d="M14 11v6" />
-          </svg>
+      {/* En-tête + repère d'étape, côte à côte sur grand écran */}
+      <div className="reset-top">
+        <div className="reset-header">
+          <div className="reset-header-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+            </svg>
+          </div>
+          <div>
+            <h1>Réinitialisation des données</h1>
+            <p>Supprime les données importées dans GLPI par cette application, en deux temps : corbeille puis suppression définitive.</p>
+          </div>
         </div>
-        <div>
-          <h1>Réinitialisation des données</h1>
-          <p>Supprime les données importées dans GLPI par cette application, en deux temps : corbeille puis suppression définitive.</p>
+
+        <div className="reset-steps">
+          <span className={`reset-step ${step === 'select' ? 'is-active' : (step !== 'select' ? 'is-done' : '')}`}>
+            <span className="reset-step-num">1</span> Mise à la corbeille
+          </span>
+          <span className="reset-step-sep" />
+          <span className={`reset-step ${step === 'review-purge' ? 'is-active' : (step === 'done' ? 'is-done' : '')}`}>
+            <span className="reset-step-num">2</span> Suppression définitive
+          </span>
         </div>
       </div>
 
-      {/* Repère d'étape */}
-      <div className="reset-steps">
-        <span className={`reset-step ${step === 'select' ? 'is-active' : (step !== 'select' ? 'is-done' : '')}`}>
-          <span className="reset-step-num">1</span> Mise à la corbeille
-        </span>
-        <span className="reset-step-sep" />
-        <span className={`reset-step ${step === 'review-purge' ? 'is-active' : (step === 'done' ? 'is-done' : '')}`}>
-          <span className="reset-step-num">2</span> Suppression définitive
-        </span>
-      </div>
+      {/* Barre de progression — visible pendant le traitement, module par module */}
+      {isProcessing && progress.total > 0 && (
+        <div className={`reset-progress ${step === 'review-purge' ? 'reset-progress--danger' : 'reset-progress--amber'}`}>
+          <div className="reset-progress-head">
+            <span className="reset-progress-label">
+              {step === 'review-purge' ? 'Suppression définitive en cours' : 'Mise à la corbeille en cours'}
+              {progress.label && <span className="reset-progress-current"> · {progress.label}</span>}
+            </span>
+            <span className="reset-progress-count">{progress.done} / {progress.total} modules</span>
+          </div>
+          <div className="reset-progress-track">
+            <div className="reset-progress-fill" style={{ width: `${progressPct}%` }} />
+          </div>
+        </div>
+      )}
 
       {/* Bandeau d'info */}
       {step === 'select' && (
@@ -212,6 +238,14 @@ const ResetPage = () => {
       )}
 
       {/* Liste des modules */}
+      <div className="reset-modules-head">
+        <span className="reset-modules-title">Modules concernés</span>
+        <span className="reset-modules-hint">
+          {step === 'select'
+            ? 'Décoche un module pour le conserver à cette étape'
+            : 'La sélection est reprise telle quelle pour la suppression définitive'}
+        </span>
+      </div>
       <div className="reset-modules-list">
         {order.map((key) => {
           const cfg = RESET_MODULES[key]

@@ -114,26 +114,38 @@ export const purgeModule = async (moduleKey) => {
 /**
  * Étape 1 pour tous les modules sélectionnés.
  * @param {Object} selectedModules - ex: { tickets: true, states: false, ... }
+ * @param {(info: { done: number, total: number, module: string, label: string, status: 'success'|'error'|'skipped' }) => void} [onProgress]
+ *   Appelé après le traitement de CHAQUE module — permet d'afficher une
+ *   barre de progression en temps réel plutôt qu'un état "tout ou rien".
  * @returns {{ success: Array, errors: Array, skipped: Array }}
  *   `skipped` liste les modules sans corbeille (rien à faire à cette étape).
  */
-export const trashAllSelected = async (selectedModules = {}) => {
+export const trashAllSelected = async (selectedModules = {}, onProgress) => {
   const results = { success: [], errors: [], skipped: [] }
+  const targets = getResetOrder().filter((key) => selectedModules[key] !== false)
+  let done = 0
 
-  for (const key of getResetOrder()) {
-    if (selectedModules[key] === false) continue
+  const report = (key, label, status) => {
+    done++
+    onProgress?.({ done, total: targets.length, module: key, label, status })
+  }
+
+  for (const key of targets) {
     const cfg = RESET_MODULES[key]
 
     if (!cfg.trashable) {
       results.skipped.push({ module: key, label: cfg.label })
+      report(key, cfg.label, 'skipped')
       continue
     }
     try {
       const count = await trashModule(key)
       results.success.push({ module: key, label: cfg.label, count })
+      report(key, cfg.label, 'success')
     } catch (err) {
       console.error(`Erreur lors de la mise à la corbeille de ${cfg.label}`, err)
       results.errors.push({ module: key, label: cfg.label, error: err.message })
+      report(key, cfg.label, 'error')
     }
   }
 
@@ -143,20 +155,29 @@ export const trashAllSelected = async (selectedModules = {}) => {
 /**
  * Étape 2 pour tous les modules sélectionnés — suppression définitive.
  * @param {Object} selectedModules - ex: { tickets: true, states: false, ... }
+ * @param {(info: { done: number, total: number, module: string, label: string, status: 'success'|'error' }) => void} [onProgress]
  */
-export const purgeAllSelected = async (selectedModules = {}) => {
+export const purgeAllSelected = async (selectedModules = {}, onProgress) => {
   const results = { success: [], errors: [] }
+  const targets = getResetOrder().filter((key) => selectedModules[key] !== false)
+  let done = 0
 
-  for (const key of getResetOrder()) {
-    if (selectedModules[key] === false) continue
+  const report = (key, label, status) => {
+    done++
+    onProgress?.({ done, total: targets.length, module: key, label, status })
+  }
+
+  for (const key of targets) {
     const cfg = RESET_MODULES[key]
 
     try {
       const count = await purgeModule(key)
       results.success.push({ module: key, label: cfg.label, count })
+      report(key, cfg.label, 'success')
     } catch (err) {
       console.error(`Erreur lors de la purge de ${cfg.label}`, err)
       results.errors.push({ module: key, label: cfg.label, error: err.message })
+      report(key, cfg.label, 'error')
     }
   }
 

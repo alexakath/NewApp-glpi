@@ -3,13 +3,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1.1rem;
-  border: 1px solid #e8ecf2;
-  border-radius: 10px;
+  padding: 0.8rem 1.1rem;
+  border: 1px solid #edf1f6;
+  border-radius: 12px;
   background: #fff;
-  transition: opacity 0.15s, border-color 0.15s;
+  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
 }
-.rmi--off { opacity: 0.5; }
+.rmi:hover { border-color: #e2e8f0; background: #fcfdfe; }
+.rmi--off { opacity: 0.48; }
 
 .rmi-main {
   display: flex;
@@ -22,7 +23,7 @@
 .rmi-checkbox {
   width: 17px;
   height: 17px;
-  accent-color: #dc2626;
+  accent-color: #64748b;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -77,6 +78,6 @@
   border-radius: 999px;
   white-space: nowrap;
 }
-.rmi-badge--loading { background: #eff6ff; color: #2563eb; }
-.rmi-badge--success { background: #f0fdf4; color: #16a34a; }
-.rmi-badge--error   { background: #fef2f2; color: #dc2626; }
+.rmi-badge--loading { background: #eff5fe; color: #3a5fa8; }
+.rmi-badge--success { background: #effaf3; color: #2f7d52; }
+.rmi-badge--error   { background: #fdf2f2; color: #a23a3a; }
