@@ -33,8 +33,8 @@ function MonitorDetail() {
 
   const fmt = (val) => val ? new Date(val).toLocaleString('fr-FR') : '—'
 
-  // v2 retourne des objets {id, name} pour les champs relationnels
-  const n = (obj) => obj?.name || null
+  // expand_dropdowns retourne string ou {id,name}
+  const dd = (val) => (val !== null && typeof val === 'object') ? (val.name ?? val.id ?? null) : (val || null)
 
   return (
     <div className="detail-wrap">
@@ -49,9 +49,9 @@ function MonitorDetail() {
         <p className="page-breadcrumb">Parc / Moniteurs</p>
         <div className="monitor-header-row">
           <h2>{monitor.name}</h2>
-          {monitor.status && (
+          {dd(monitor.status) && (
             <span className="badge" style={{ background: '#d1fae5', color: '#065f46' }}>
-              {monitor.status.name}
+              {dd(monitor.status)}
             </span>
           )}
         </div>
@@ -62,19 +62,19 @@ function MonitorDetail() {
           <h3>Identification</h3>
           <Row label="N° de série"   value={monitor.serial} />
           <Row label="N° inventaire" value={monitor.otherserial} />
-          <Row label="Type"          value={n(monitor.type)} />
-          <Row label="Fabricant"     value={n(monitor.manufacturer)} />
-          <Row label="Modèle"        value={n(monitor.model)} />
+          <Row label="Type"          value={dd(monitor.type)} />
+          <Row label="Fabricant"     value={dd(monitor.manufacturer)} />
+          <Row label="Modèle"        value={dd(monitor.model)} />
           <Row label="Taille écran"  value={monitor.size > 0 ? `${monitor.size}"` : null} />
         </div>
 
         <div className="detail-section">
           <h3>Affectation</h3>
-          <Row label="Entité"       value={n(monitor.entity)} />
-          <Row label="Localisation" value={n(monitor.location)} />
-          <Row label="Utilisateur"  value={n(monitor.user)} />
-          <Row label="Technicien"   value={n(monitor.user_tech)} />
-          <Row label="Groupe"       value={Array.isArray(monitor.group) && monitor.group.length ? monitor.group.map(g => g.name).join(', ') : null} />
+          <Row label="Entité"       value={dd(monitor.entity)} />
+          <Row label="Localisation" value={dd(monitor.location)} />
+          <Row label="Utilisateur"  value={dd(monitor.user)} />
+          <Row label="Technicien"   value={dd(monitor.user_tech)} />
+          <Row label="Groupe"       value={dd(monitor.group?.[0])} />
         </div>
 
         <div className="detail-section">

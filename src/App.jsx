@@ -10,6 +10,8 @@ import LoginPage from './pages/LoginPage'
 import TicketDetail from './components/TicketDetail'
 import ComputerDetail from './components/ComputerDetail'
 import MonitorDetail from './components/MonitorDetail'
+import ImportPage from './pages/ImportPage'
+import ResetPage from './pages/ResetPage'
 import FrontApp from './front/FrontApp'
 import './App.css'
 
@@ -47,6 +49,8 @@ function App() {
         <Route path="/computers/:id"   element={<ComputerDetail />} />
         <Route path="/monitors"        element={<MonitorsPage />} />
         <Route path="/monitors/:id"    element={<MonitorDetail />} />
+        <Route path="/import"          element={<ImportPage />} />
+        <Route path="/reset"           element={<ResetPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

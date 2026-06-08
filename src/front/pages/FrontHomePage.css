@@ -170,6 +170,8 @@
 }
 .fh-card-img svg { width: 48px; height: 48px; }
 
+/* Style neutre par défaut (tout type sans couleur dédiée — Peripheral, Printer, etc.) */
+.fh-card-img { background: var(--f-bg); color: var(--f-muted); }
 .fh-card--computer .fh-card-img { background: var(--f-accent-soft); color: var(--f-accent); }
 .fh-card--monitor  .fh-card-img { background: var(--f-purple-soft); color: var(--f-purple); }
 
@@ -187,6 +189,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  color: var(--f-muted);
 }
 .fh-card--computer .fh-card-type { color: var(--f-accent); }
 .fh-card--monitor  .fh-card-type { color: var(--f-purple); }

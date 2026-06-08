@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { getMonitors } from '../api/monitors'
 import './MonitorsPage.css'
 
-// v2 retourne des objets {id, name} pour les champs relationnels
-const n = (obj) => obj?.name || '—'
+// expand_dropdowns peut retourner un string ou un objet {id,name}
+const dd = (val) => (val !== null && typeof val === 'object') ? (val.name ?? val.id ?? null) : (val || null)
 
 function MonitorsPage() {
   const navigate = useNavigate()
@@ -38,8 +38,8 @@ function MonitorsPage() {
             <tr>
               <th>#</th>
               <th>Nom</th>
-              <th>N° de série</th>
-              <th>Taille</th>
+              <th>N° inventaire</th>
+              <th>Fabricant</th>
               <th>Localisation</th>
               <th>État</th>
               <th>Entité</th>
@@ -56,16 +56,16 @@ function MonitorsPage() {
                 <td className="title-cell">
                   <span className="row-title" title={monitor.name}>{monitor.name}</span>
                 </td>
-                <td className="muted">{monitor.serial || '—'}</td>
-                <td className="muted">{monitor.size > 0 ? `${monitor.size}"` : '—'}</td>
-                <td className="muted">{n(monitor.location)}</td>
+                <td className="muted">{monitor.otherserial || monitor.serial || '—'}</td>
+                <td className="muted">{dd(monitor.manufacturer) || '—'}</td>
+                <td className="muted">{dd(monitor.location) || '—'}</td>
                 <td>
-                  {monitor.status
-                    ? <span className="state-pill">{n(monitor.status)}</span>
+                  {dd(monitor.status)
+                    ? <span className="state-pill">{dd(monitor.status)}</span>
                     : <span className="muted">—</span>
                   }
                 </td>
-                <td className="muted">{n(monitor.entity)}</td>
+                <td className="muted">{dd(monitor.entity) || '—'}</td>
               </tr>
             ))}
           </tbody>

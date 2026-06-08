@@ -1,23 +1,48 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAssets from '../hooks/useAssets'
-import { IcoComputer, IcoMonitor, IcoSearch, IcoFilter, IcoX, IcoRefresh, IcoEmpty, IcoPin, IcoHash } from '../icons'
+import { ASSET_TYPES } from '../../api/assets'
+import { IcoComputer, IcoMonitor, IcoAsset, IcoSearch, IcoFilter, IcoX, IcoRefresh, IcoEmpty, IcoPin, IcoHash } from '../icons'
 import './FrontHomePage.css'
 
+const dd = (v) => (v !== null && typeof v === 'object') ? (v.name ?? v.id ?? null) : (v ?? null)
+
+// Icône par type — Computer/Monitor ont une icône dédiée, les autres une icône générique
+const ICONS_BY_TYPE = { Computer: IcoComputer, Monitor: IcoMonitor }
+const iconFor = (itemtype) => ICONS_BY_TYPE[itemtype] ?? IcoAsset
+
+// Construit la ligne secondaire de la carte : OS (ordinateur), taille (moniteur)
+// ou type d'actif — premier champ pertinent disponible sur l'objet GLPI
+const metaFor = (item) =>
+  dd(item.operatingsystem)
+  || (item.size > 0 ? `${item.size}"` : null)
+  || dd(item.type)
+  || null
+
+// Route de détail : Computer/Monitor ont une page dédiée, les autres la page générique
+const detailPath = (itemtype, id) => {
+  if (itemtype === 'Computer') return `/front/computers/${id}`
+  if (itemtype === 'Monitor')  return `/front/monitors/${id}`
+  return `/front/assets/${itemtype}/${id}`
+}
+
 // ── Carte d'un équipement ──────────────────────────────────────────────────
-function AssetCard({ type, name, serial, os, size, location, status, onClick }) {
-  const isComputer = type === 'computer'
+function AssetCard({ itemtype, name, serial, meta, location, status, imageUrl, onClick }) {
+  const Icon = iconFor(itemtype)
   return (
-    <div className={`fh-card fh-card--${type}`} onClick={onClick}>
+    <div className={`fh-card fh-card--${itemtype.toLowerCase()}`} onClick={onClick}>
       <div className="fh-card-img">
-        {isComputer ? <IcoComputer /> : <IcoMonitor />}
+        {imageUrl
+          ? <img src={imageUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+          : <Icon />
+        }
       </div>
       <div className="fh-card-body">
-        <span className="fh-card-type">{isComputer ? 'Ordinateur' : 'Moniteur'}</span>
+        <span className="fh-card-type">{ASSET_TYPES[itemtype]?.label ?? itemtype}</span>
         <h3 className="fh-card-name">{name || '—'}</h3>
         <p className="fh-card-serial">{serial || 'N° série non renseigné'}</p>
-        {(os || size) && <p className="fh-card-meta">{os || size}</p>}
-        {location    && <p className="fh-card-location">📍 {location}</p>}
+        {meta     && <p className="fh-card-meta">{meta}</p>}
+        {location && <p className="fh-card-location">📍 {location}</p>}
         <p className={`fh-card-status ${status ? '' : 'fh-card-status--empty'}`}>
           {status || 'Statut non renseigné'}
         </p>
@@ -29,7 +54,7 @@ function AssetCard({ type, name, serial, os, size, location, status, onClick }) 
 // ── Page principale ────────────────────────────────────────────────────────
 function FrontHomePage() {
   const navigate = useNavigate()
-  const { computers, monitors, loading, error } = useAssets()
+  const { assetsByType, imageMap, loading, error } = useAssets()
 
   // États des filtres séparés
   const [searchName,      setSearchName]      = useState('')
@@ -48,27 +73,21 @@ function FrontHomePage() {
     setTypeFilter('')
   }
 
-  // Fusion normalisée des deux listes
-  const allAssets = useMemo(() => [
-    ...computers.map(c => ({
-      id:       c.id,
-      type:     'computer',
-      name:     c.name,
-      serial:   c.serial,
-      os:       c.operatingsystems_id,
-      location: c.locations_id,
-      status:   c.states_id,
-    })),
-    ...monitors.map(m => ({
-      id:       m.id,
-      type:     'monitor',
-      name:     m.name,
-      serial:   m.serial,
-      size:     m.size > 0 ? `${m.size}"` : null,
-      location: m.location?.name,
-      status:   m.status?.name,
-    })),
-  ], [computers, monitors])
+  // Fusion normalisée de tous les types déclarés dans ASSET_TYPES — ajouter un
+  // type au registre suffit à le faire apparaître ici, sans toucher à cette page
+  const allAssets = useMemo(() =>
+    Object.entries(assetsByType).flatMap(([itemtype, items]) =>
+      items.filter(it => !it.is_deleted).map(it => ({
+        id:       it.id,
+        itemtype,
+        name:     it.name,
+        serial:   it.serial,
+        meta:     metaFor(it),
+        location: dd(it.location),
+        status:   dd(it.status),
+      }))
+    )
+  , [assetsByType])
 
   // Options dynamiques pour les selects (valeurs uniques, triées)
   const locationOptions = useMemo(() =>
@@ -79,6 +98,11 @@ function FrontHomePage() {
     [...new Set(allAssets.map(a => a.status).filter(Boolean))].sort()
   , [allAssets])
 
+  // Types réellement présents dans le parc (pour ne pas afficher de filtre vide)
+  const typeOptions = useMemo(() =>
+    Object.keys(assetsByType).filter(t => assetsByType[t]?.some(it => !it.is_deleted))
+  , [assetsByType])
+
   // Filtrage multi-critères
   const filtered = useMemo(() => {
     const qName   = searchName.toLowerCase()
@@ -88,7 +112,7 @@ function FrontHomePage() {
       const matchSerial   = !qSerial   || (a.serial || '').toLowerCase().includes(qSerial)
       const matchLocation = !locationFilter || a.location === locationFilter
       const matchStatus   = !statusFilter   || a.status   === statusFilter
-      const matchType     = !typeFilter     || a.type      === typeFilter
+      const matchType     = !typeFilter     || a.itemtype === typeFilter
       return matchName && matchSerial && matchLocation && matchStatus && matchType
     })
   }, [allAssets, searchName, searchSerial, locationFilter, statusFilter, typeFilter])
@@ -169,8 +193,9 @@ function FrontHomePage() {
             <span className="ff-icon"><IcoFilter /></span>
             <select className="ff-input ff-select" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
               <option value="">Tous</option>
-              <option value="computer">Ordinateurs</option>
-              <option value="monitor">Moniteurs</option>
+              {typeOptions.map(t => (
+                <option key={t} value={t}>{ASSET_TYPES[t]?.labelPlural ?? t}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -195,9 +220,10 @@ function FrontHomePage() {
         <div className="fh-grid">
           {filtered.map(a => (
             <AssetCard
-              key={`${a.type}-${a.id}`}
+              key={`${a.itemtype}-${a.id}`}
               {...a}
-              onClick={() => navigate(`/front/${a.type}s/${a.id}`)}
+              imageUrl={imageMap.get(`${a.itemtype}-${a.id}`)}
+              onClick={() => navigate(detailPath(a.itemtype, a.id))}
             />
           ))}
         </div>

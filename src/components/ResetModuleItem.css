@@ -1,0 +1,83 @@
+.rmi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1.1rem;
+  border: 1px solid #edf1f6;
+  border-radius: 12px;
+  background: #fff;
+  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+}
+.rmi:hover { border-color: #e2e8f0; background: #fcfdfe; }
+.rmi--off { opacity: 0.48; }
+
+.rmi-main {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.rmi-checkbox {
+  width: 17px;
+  height: 17px;
+  accent-color: #64748b;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.rmi-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.rmi-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.rmi-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.rmi-note {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rmi-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.rmi-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.rmi-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.rmi-badge--loading { background: #eff5fe; color: #3a5fa8; }
+.rmi-badge--success { background: #effaf3; color: #2f7d52; }
+.rmi-badge--error   { background: #fdf2f2; color: #a23a3a; }

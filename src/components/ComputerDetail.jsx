@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getComputerFull } from '../api/computers'
 import './ComputerDetail.css'
 
+const dd = (val) => (val !== null && typeof val === 'object') ? (val.name ?? val.id ?? null) : (val || null)
+
 function Row({ label, value }) {
   return (
     <div className="detail-row">
@@ -46,9 +48,9 @@ function ComputerDetail() {
         <p className="page-breadcrumb">Parc / Ordinateurs</p>
         <div className="cd-header-row">
           <h2>{computer.name}</h2>
-          {computer.states_id && (
+          {dd(computer.status) && (
             <span className="badge" style={{ background: '#d1fae5', color: '#065f46' }}>
-              {computer.states_id}
+              {dd(computer.status)}
             </span>
           )}
         </div>
@@ -59,25 +61,25 @@ function ComputerDetail() {
           <h3>Identification</h3>
           <Row label="Numéro de série" value={computer.serial} />
           <Row label="N° inventaire"   value={computer.otherserial} />
-          <Row label="Type"            value={computer.computertypes_id} />
-          <Row label="Fabricant"       value={computer.manufacturers_id} />
-          <Row label="Modèle"          value={computer.computermodels_id} />
+          <Row label="Type"            value={dd(computer.type)} />
+          <Row label="Fabricant"       value={dd(computer.manufacturer)} />
+          <Row label="Modèle"          value={dd(computer.model)} />
         </div>
 
         <div className="detail-section">
           <h3>Localisation</h3>
-          <Row label="Entité"       value={computer.entities_id} />
-          <Row label="Localisation" value={computer.locations_id} />
-          <Row label="Groupe"       value={computer.groups_id} />
-          <Row label="Utilisateur"  value={computer.users_id} />
-          <Row label="Technicien"   value={computer.users_id_tech} />
+          <Row label="Entité"       value={dd(computer.entity)} />
+          <Row label="Localisation" value={dd(computer.location)} />
+          <Row label="Groupe"       value={dd(computer.group?.[0])} />
+          <Row label="Utilisateur"  value={dd(computer.user)} />
+          <Row label="Technicien"   value={dd(computer.user_tech)} />
         </div>
 
         <div className="detail-section">
           <h3>Système</h3>
-          <Row label="Système d'exploitation" value={computer.operatingsystems_id} />
-          <Row label="Version OS"             value={computer.operatingsystemversions_id} />
-          <Row label="Architecture"           value={computer.operatingsystemarchitectures_id} />
+          <Row label="Système d'exploitation" value={dd(computer.operatingsystems_id ?? computer.operatingsystem)} />
+          <Row label="Version OS"             value={dd(computer.operatingsystemversions_id ?? computer.operatingsystemversion)} />
+          <Row label="Architecture"           value={dd(computer.operatingsystemarchitectures_id ?? computer.operatingsystemarchitecture)} />
           <Row label="UUID"                   value={computer.uuid} />
         </div>
 
