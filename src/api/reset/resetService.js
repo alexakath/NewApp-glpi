@@ -26,10 +26,26 @@ import { RESET_MODULES, getResetOrder } from './resetConfig'
 // Récupère tous les items "à nous" d'un module (corbeille incluse, items
 // protégés exclus) — la distinction actif/à la corbeille se fait ensuite
 // via le champ is_deleted, présent uniquement sur les types `trashable`.
+//
+// Piège v1 : contrairement à la v2 (qui renvoie tout, actifs ET à la
+// corbeille, is_deleted servant juste d'indicateur), la liste v1 FILTRE par
+// is_deleted et ne renvoie QUE les éléments actifs (is_deleted=0) si on ne
+// précise rien. Pour un module v1 + trashable (Document), il faut donc
+// interroger les deux états séparément et fusionner — sinon les éléments
+// déjà à la corbeille deviennent invisibles pour purgeModule/getResetStats.
 const fetchModuleItems = async (cfg) => {
-  const items = cfg.isV1
-    ? await getV1Items(cfg.glpiPath, { range: '0-999' })
-    : await getItems(cfg.glpiPath, { range: '0-999' })
+  let items
+  if (cfg.isV1 && cfg.trashable) {
+    const [active, trashed] = await Promise.all([
+      getV1Items(cfg.glpiPath, { range: '0-999', is_deleted: 0 }),
+      getV1Items(cfg.glpiPath, { range: '0-999', is_deleted: 1 }),
+    ])
+    items = [...active, ...trashed]
+  } else if (cfg.isV1) {
+    items = await getV1Items(cfg.glpiPath, { range: '0-999' })
+  } else {
+    items = await getItems(cfg.glpiPath, { range: '0-999' })
+  }
 
   return cfg.isProtected ? items.filter(it => !cfg.isProtected(it)) : items
 }

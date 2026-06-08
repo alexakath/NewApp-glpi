@@ -48,7 +48,7 @@ function FrontTicketForm() {
   const isEdit    = Boolean(id)
 
   // Chargement des ordinateurs et moniteurs pour les selects d'éléments
-  const { computers, monitors } = useAssets()
+  const { assetsByType } = useAssets()
 
   // État du formulaire principal
   const [form,             setForm]             = useState(emptyForm())
@@ -120,8 +120,8 @@ function FrontTicketForm() {
 
   // ── Options d'équipements selon le type sélectionné ────────────────────
   const assetOptions = (assetType) => {
-    if (assetType === 'computer') return computers.map(c => ({ value: String(c.id), label: c.name }))
-    if (assetType === 'monitor')  return monitors.map(m => ({ value: String(m.id), label: m.name }))
+    if (assetType === 'computer') return (assetsByType.Computer ?? []).map(c => ({ value: String(c.id), label: c.name }))
+    if (assetType === 'monitor')  return (assetsByType.Monitor  ?? []).map(m => ({ value: String(m.id), label: m.name }))
     return []
   }
 
