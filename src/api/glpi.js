@@ -1,12 +1,25 @@
 import axios from 'axios'
-import { getAccessToken, logout } from './auth'
+import { getAccessToken, logout, login } from './auth'
 
-// Redirige vers la page de login en vidant la session.
-// Utilisé aussi bien quand le token local est expiré que quand le serveur
-// renvoie un 401 — dans les deux cas l'utilisateur doit se reconnecter.
-const redirectToLogin = () => {
+// Évite les appels multiples si plusieurs requêtes échouent en même temps avec 401.
+let _sessionHandling = false
+
+// Gère l'expiration de session selon le contexte :
+//   - back-office (/*)     → redirige vers /login
+//   - portail front (/front/*) → re-authentification silencieuse puis rechargement
+const handleSessionExpired = () => {
+  if (_sessionHandling) return
+  _sessionHandling = true
   logout()
-  window.location.replace('/login')
+
+  if (window.location.pathname.startsWith('/front')) {
+    const code = import.meta.env.VITE_DEFAULT_CODE ?? ''
+    login(code)
+      .then(() => window.location.reload())
+      .catch(() => window.location.replace('/login'))
+  } else {
+    window.location.replace('/login')
+  }
 }
 
 // Intercepte tous les 401 retournés par le serveur GLPI.
@@ -16,7 +29,7 @@ axios.interceptors.response.use(
   err => {
     const url = err.config?.url ?? ''
     if (err.response?.status === 401 && !url.includes('/token')) {
-      redirectToLogin()
+      handleSessionExpired()
     }
     return Promise.reject(err)
   }
@@ -37,11 +50,11 @@ const DEFAULT_PARAMS = {
 }
 
 // Construit le header Authorization à partir du token OAuth2 stocké.
-// Si le token est absent ou expiré, redirige vers /login (ne retourne jamais).
+// Si le token est absent ou expiré, déclenche handleSessionExpired (ne retourne jamais).
 const getHeaders = async () => {
   const token = await getAccessToken()
   if (!token) {
-    redirectToLogin()
+    handleSessionExpired()
     throw new Error('SESSION_EXPIRED') // empêche la suite de s'exécuter
   }
   return { Authorization: `Bearer ${token}` }
