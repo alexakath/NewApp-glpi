@@ -1,6 +1,27 @@
 import axios from 'axios'
 import { getAccessToken, logout } from './auth'
 
+// Redirige vers la page de login en vidant la session.
+// Utilisé aussi bien quand le token local est expiré que quand le serveur
+// renvoie un 401 — dans les deux cas l'utilisateur doit se reconnecter.
+const redirectToLogin = () => {
+  logout()
+  window.location.replace('/login')
+}
+
+// Intercepte tous les 401 retournés par le serveur GLPI.
+// Exception : la route /token (échec de login → message d'erreur dans LoginPage).
+axios.interceptors.response.use(
+  res => res,
+  err => {
+    const url = err.config?.url ?? ''
+    if (err.response?.status === 401 && !url.includes('/token')) {
+      redirectToLogin()
+    }
+    return Promise.reject(err)
+  }
+)
+
 // ═══════════════════════════════════════════════════════════════════
 //  BLOC v2 — API HL GLPI  (/api.php/v2.3)
 //  Auth : Bearer token OAuth2, renouvelé automatiquement via auth.js
@@ -15,12 +36,13 @@ const DEFAULT_PARAMS = {
   range: '0-99',            // limite à 100 résultats (suffisant pour nos listes)
 }
 
-// Construit le header Authorization à partir du token OAuth2 stocké
+// Construit le header Authorization à partir du token OAuth2 stocké.
+// Si le token est absent ou expiré, redirige vers /login (ne retourne jamais).
 const getHeaders = async () => {
   const token = await getAccessToken()
   if (!token) {
-    logout()
-    throw new Error('Session expirée — veuillez vous reconnecter.')
+    redirectToLogin()
+    throw new Error('SESSION_EXPIRED') // empêche la suite de s'exécuter
   }
   return { Authorization: `Bearer ${token}` }
 }
