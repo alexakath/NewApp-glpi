@@ -12,4 +12,13 @@ db.pragma('journal_mode = WAL')
 // Crée toutes les tables déclarées dans modules/index.js
 Object.values(MODULES).forEach(mod => db.exec(mod.schema))
 
+// Table settings — indépendante, pas dans MODULES (routes custom uniquement)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS settings (
+    key        TEXT PRIMARY KEY,
+    value      TEXT NOT NULL,
+    updated_at TEXT DEFAULT (datetime('now'))
+  )
+`)
+
 module.exports = db

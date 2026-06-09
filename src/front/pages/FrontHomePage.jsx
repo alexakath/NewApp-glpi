@@ -57,17 +57,19 @@ function FrontHomePage() {
   const { assetsByType, imageMap, loading, error } = useAssets()
 
   // États des filtres séparés
-  const [searchName,      setSearchName]      = useState('')
-  const [searchSerial,    setSearchSerial]    = useState('')
-  const [locationFilter,  setLocationFilter]  = useState('')
-  const [statusFilter,    setStatusFilter]    = useState('')
-  const [typeFilter,      setTypeFilter]      = useState('')
+  const [searchName,        setSearchName]        = useState('')
+  const [searchSerial,      setSearchSerial]      = useState('')
+  const [manufacturerFilter, setManufacturerFilter] = useState('')
+  const [locationFilter,    setLocationFilter]    = useState('')
+  const [statusFilter,      setStatusFilter]      = useState('')
+  const [typeFilter,        setTypeFilter]        = useState('')
 
-  const hasFilters = searchName || searchSerial || locationFilter || statusFilter || typeFilter
+  const hasFilters = searchName || searchSerial || manufacturerFilter || locationFilter || statusFilter || typeFilter
 
   const resetFilters = () => {
     setSearchName('')
     setSearchSerial('')
+    setManufacturerFilter('')
     setLocationFilter('')
     setStatusFilter('')
     setTypeFilter('')
@@ -78,18 +80,23 @@ function FrontHomePage() {
   const allAssets = useMemo(() =>
     Object.entries(assetsByType).flatMap(([itemtype, items]) =>
       items.filter(it => !it.is_deleted).map(it => ({
-        id:       it.id,
+        id:           it.id,
         itemtype,
-        name:     it.name,
-        serial:   it.serial,
-        meta:     metaFor(it),
-        location: dd(it.location),
-        status:   dd(it.status),
+        name:         it.name,
+        serial:       it.serial,
+        manufacturer: dd(it.manufacturer),
+        meta:         metaFor(it),
+        location:     dd(it.location),
+        status:       dd(it.status),
       }))
     )
   , [assetsByType])
 
   // Options dynamiques pour les selects (valeurs uniques, triées)
+  const manufacturerOptions = useMemo(() =>
+    [...new Set(allAssets.map(a => a.manufacturer).filter(Boolean))].sort()
+  , [allAssets])
+
   const locationOptions = useMemo(() =>
     [...new Set(allAssets.map(a => a.location).filter(Boolean))].sort()
   , [allAssets])
@@ -107,15 +114,17 @@ function FrontHomePage() {
   const filtered = useMemo(() => {
     const qName   = searchName.toLowerCase()
     const qSerial = searchSerial.toLowerCase()
+
     return allAssets.filter(a => {
-      const matchName     = !qName     || (a.name   || '').toLowerCase().includes(qName)
-      const matchSerial   = !qSerial   || (a.serial || '').toLowerCase().includes(qSerial)
-      const matchLocation = !locationFilter || a.location === locationFilter
-      const matchStatus   = !statusFilter   || a.status   === statusFilter
-      const matchType     = !typeFilter     || a.itemtype === typeFilter
-      return matchName && matchSerial && matchLocation && matchStatus && matchType
+      const matchName         = !qName             || (a.name         || '').toLowerCase().includes(qName)
+      const matchSerial       = !qSerial           || (a.serial       || '').toLowerCase().includes(qSerial)
+      const matchManufacturer = !manufacturerFilter || a.manufacturer === manufacturerFilter
+      const matchLocation     = !locationFilter     || a.location     === locationFilter
+      const matchStatus       = !statusFilter       || a.status       === statusFilter
+      const matchType         = !typeFilter         || a.itemtype     === typeFilter
+      return matchName && matchSerial && matchManufacturer && matchLocation && matchStatus && matchType
     })
-  }, [allAssets, searchName, searchSerial, locationFilter, statusFilter, typeFilter])
+  }, [allAssets, searchName, searchSerial, manufacturerFilter, locationFilter, statusFilter, typeFilter])
 
   if (loading) return <p className="fh-status">Chargement du parc…</p>
   if (error)   return <p className="fh-status fh-status--error">Erreur : {error}</p>
@@ -159,6 +168,18 @@ function FrontHomePage() {
               onChange={e => setSearchSerial(e.target.value)}
             />
             {searchSerial && <button className="ff-clear" onClick={() => setSearchSerial('')}><IcoX /></button>}
+          </div>
+        </div>
+
+        {/* Fabricant */}
+        <div className="ff-field">
+          <label className="ff-label">Fabricant</label>
+          <div className="ff-wrap">
+            <span className="ff-icon"><IcoFilter /></span>
+            <select className="ff-input ff-select" value={manufacturerFilter} onChange={e => setManufacturerFilter(e.target.value)}>
+              <option value="">Tous</option>
+              {manufacturerOptions.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
           </div>
         </div>
 

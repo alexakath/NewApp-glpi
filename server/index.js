@@ -3,7 +3,7 @@ const express            = require('express')
 const cors               = require('cors')
 const { MODULES }        = require('./modules')
 const makeResourceRouter = require('./routes/resource')
-const { seedKanban }     = require('./seeds')
+const { seedKanban, seedSettings } = require('./seeds')
 
 const app  = express()
 const PORT = process.env.PORT || 3001
@@ -13,6 +13,7 @@ app.use(express.json({ limit: '10mb' }))
 
 // Valeurs par défaut pour les tables indépendantes
 seedKanban()
+seedSettings()
 
 // Auto-enregistrement des routes de lecture pour chaque module
 Object.entries(MODULES).forEach(([key, mod]) => {
@@ -21,6 +22,7 @@ Object.entries(MODULES).forEach(([key, mod]) => {
 
 // Routes d'écriture custom pour tables indépendantes
 app.use('/api/kanban_columns', require('./routes/kanban'))
+app.use('/api/settings',       require('./routes/settings'))
 
 // Route de synchronisation générique (POST /api/sync/:moduleKey)
 app.use('/api/sync', require('./routes/sync'))

@@ -14,6 +14,10 @@ export const STATUS_LABELS = {
   6: 'Clôturé',
 }
 
+// Sous-ensemble utilisé dans le Kanban — noms affichés dans l'UI NewApp
+export const KANBAN_STATUS_IDS    = [1, 2, 5]
+export const KANBAN_STATUS_LABELS = { 1: 'Nouveau', 2: 'In progress', 5: 'Terminé' }
+
 export const PRIORITY_LABELS = {
   1: 'Très basse',
   2: 'Basse',

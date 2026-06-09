@@ -8,6 +8,7 @@ import FrontMonitorDetail from './pages/FrontMonitorDetail'
 import FrontAssetDetail from './pages/FrontAssetDetail'
 import FrontTicketsPage from './pages/FrontTicketsPage'
 import FrontTicketForm from './pages/FrontTicketForm'
+import FrontKanbanPage from './pages/FrontKanbanPage'
 
 const DEFAULT_CODE = import.meta.env.VITE_DEFAULT_CODE ?? ''
 
@@ -34,6 +35,7 @@ function FrontApp() {
         <Route path="monitors/:id"      element={<FrontMonitorDetail />} />
         <Route path="assets/:itemtype/:id" element={<FrontAssetDetail />} />
         {/* Routes tickets — "new" avant ":id/edit" pour éviter toute ambiguïté */}
+        <Route path="kanban"            element={<FrontKanbanPage />} />
         <Route path="tickets"           element={<FrontTicketsPage />} />
         <Route path="tickets/new"       element={<FrontTicketForm />} />
         <Route path="tickets/:id/edit"  element={<FrontTicketForm />} />
