@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   createTicket, updateTicket, getTicket,
   getTicketItems, addItemToTicket, removeItemFromTicket,
-  TYPE_LABELS, STATUS_LABELS, URGENCY_LABELS,
+  TYPE_LABELS, KANBAN_STATUS_LABELS, URGENCY_LABELS,
 } from '../../api/tickets'
 import useAssets from '../hooks/useAssets'
 import { IcoBack } from '../icons'
@@ -254,7 +254,7 @@ function FrontTicketForm() {
             <div className="ftf-field">
               <label className="ftf-label">Statut</label>
               <select className="ftf-input ftf-select" value={form.status} onChange={e => updateField('status', e.target.value)}>
-                {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                {Object.entries(KANBAN_STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
           </div>

@@ -40,6 +40,21 @@ export const getTicketsCountFromSQLite = () => getCountFromSQLite('tickets')
 export const clearTicketsFromSQLite    = () => clearFromSQLite('tickets')
 export const syncTicketsToSQLite       = (tickets) => syncToSQLite('tickets', tickets)
 
+// ── Settings ──────────────────────────────────────────────────────────────────
+
+export const getSetting = (key) =>
+  fetch(`${BASE}/settings/${key}`).then(json).then(r => r.value)
+
+export const setSetting = (key, value) =>
+  fetch(`${BASE}/settings/${key}`, {
+    method:  'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ value }),
+  }).then(json)
+
+export const getKanbanLang = () => getSetting('kanban_lang')
+export const setKanbanLang = (lang) => setSetting('kanban_lang', lang)
+
 // ── Kanban columns (table indépendante GLPI) ──────────────────────────────────
 
 export const getKanbanColumns = () =>

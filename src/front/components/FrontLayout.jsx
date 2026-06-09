@@ -17,10 +17,16 @@ function FrontLayout({ children }) {
               Parc informatique
             </NavLink>
             <NavLink
-              to="/front/tickets"
+              to="/front/kanban"
               className={({ isActive }) => `fl-nav-link${isActive ? ' active' : ''}`}
             >
               Tickets
+            </NavLink>
+            <NavLink
+              to="/front/tickets"
+              className={({ isActive }) => `fl-nav-link${isActive ? ' active' : ''}`}
+            >
+              Creer un ticket
             </NavLink>
           </div>
         </div>

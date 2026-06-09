@@ -1,0 +1,306 @@
+.fk-page {
+  padding: 1.5rem 2rem;
+}
+.fk-header { margin-bottom: 1.25rem; }
+.fk-title  { font-size: 1.4rem; font-weight: 700; color: #111827; margin: 0; }
+
+.fk-state         { padding: 2rem; color: #6b7280; font-size: 0.9rem; }
+.fk-state--error  { color: #dc2626; }
+
+/* ── Board ── */
+.fk-board {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+/* ── Colonne ── */
+.fk-col {
+  flex: 1;
+  min-width: 0;
+  border-radius: 12px;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: background 0.3s, outline 0.15s;
+  outline: 2px solid transparent;
+  min-height: 120px;
+}
+.fk-col--over {
+  outline: 2px dashed rgba(0,0,0,0.25);
+  outline-offset: -2px;
+}
+
+.fk-col-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.fk-col-title { font-size: 0.95rem; font-weight: 700; color: #111827; }
+.fk-count {
+  background: rgba(0,0,0,0.12);
+  color: #374151;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.1rem 0.55rem;
+}
+
+/* ── Cartes ── */
+.fk-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.fk-card {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  cursor: grab;
+  transition: box-shadow 0.15s, opacity 0.15s;
+  user-select: none;
+}
+.fk-card:hover       { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.fk-card:active      { cursor: grabbing; }
+.fk-card--dragging   { opacity: 0.35; }
+
+.fk-card-id {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+.fk-card-name {
+  font-size: 0.875rem;
+  color: #111827;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Bouton ajouter ── */
+.fk-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  background: rgba(255,255,255,0.55);
+  border: 1.5px dashed rgba(0,0,0,0.2);
+  border-radius: 8px;
+  color: #4b5563;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.55rem 0;
+  margin-top: 0.4rem;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.fk-add-btn:hover {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(0,0,0,0.35);
+  color: #111827;
+}
+.fk-add-btn-plus {
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 400;
+}
+
+/* ── Overlay (dialog + détail) ── */
+.fk-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+/* ── Boîte de dialogue résolution ── */
+.fk-dialog {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.75rem;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.fk-dialog-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.5rem;
+}
+.fk-dialog-sub {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+.fk-dialog-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.4rem;
+}
+.fk-dialog-opt { color: #9ca3af; font-weight: 400; }
+.fk-dialog-textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #111827;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.fk-dialog-textarea:focus { outline: none; border-color: #6366f1; }
+.fk-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.fk-dialog-btn {
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+.fk-dialog-btn:disabled          { opacity: 0.45; cursor: not-allowed; }
+.fk-dialog-btn--cancel           { background: #f1f5f9; color: #374151; }
+.fk-dialog-btn--cancel:hover     { background: #e2e8f0; }
+.fk-dialog-btn--confirm          { background: #16a34a; color: #fff; }
+.fk-dialog-btn--confirm:not(:disabled):hover { background: #15803d; }
+
+/* ── Détail ticket ── */
+.fk-detail {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.75rem;
+  width: 100%;
+  max-width: 540px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fk-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.fk-detail-id {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  display: block;
+}
+.fk-detail-close {
+  font-size: 1.4rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.fk-detail-close:hover { color: #111827; }
+
+.fk-detail-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.fk-detail-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.fk-detail-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #374151;
+}
+.fk-detail-badge--status {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.fk-detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fafafa;
+}
+.fk-detail-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #111827;
+}
+.fk-detail-key {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b7280;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.fk-detail-section { display: flex; flex-direction: column; gap: 0.35rem; }
+.fk-detail-desc {
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 0.75rem;
+  border: 1px solid #f1f5f9;
+}
+
+.fk-detail-footer {
+  padding-top: 0.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+.fk-detail-edit-btn {
+  padding: 0.5rem 1.1rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.fk-detail-edit-btn:hover { background: #e2e8f0; }

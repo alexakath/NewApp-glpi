@@ -1,0 +1,194 @@
+/* Panneau latéral (drawer) — reproduit le style TicketDetail backoffice */
+
+.ktm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 200;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ktm-panel {
+  width: 580px;
+  max-width: 100%;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
+  animation: ktm-slide-in 0.2s ease;
+}
+
+@keyframes ktm-slide-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ── En-tête fixe ── */
+.ktm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+.ktm-breadcrumb {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0 0 0.2rem;
+}
+.ktm-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  line-height: 1.4;
+  max-width: 440px;
+}
+.ktm-title--error { color: #dc2626; }
+
+.ktm-close {
+  font-size: 1.5rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.ktm-close:hover { color: #111827; }
+
+/* ── Corps scrollable ── */
+.ktm-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ktm-state       { color: #6b7280; font-size: 0.9rem; }
+.ktm-state--error { color: #dc2626; }
+
+/* ── Badges ── */
+.ktm-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.ktm-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #374151;
+}
+
+/* ── Grille 2 colonnes ── */
+.ktm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* ── Section ── */
+.ktm-section { display: flex; flex-direction: column; gap: 0; }
+.ktm-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* ── Row (reproduit detail-row backoffice) ── */
+.ktm-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f9fafb;
+  font-size: 0.875rem;
+  align-items: baseline;
+}
+.ktm-row:last-child { border-bottom: none; }
+.ktm-row-label {
+  width: 120px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+.ktm-row-value { color: #111827; }
+.ktm-serial    { font-size: 0.78rem; color: #9ca3af; }
+
+/* ── Tableau coûts ── */
+.ktm-cost-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+.ktm-cost-table th {
+  text-align: right;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 6px 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.ktm-cost-table th:first-child { text-align: left; }
+.ktm-cost-table td {
+  padding: 8px 10px;
+  text-align: right;
+  color: #374151;
+  border-bottom: 1px solid #f9fafb;
+}
+.ktm-cost-table td:first-child { text-align: left; }
+.ktm-cost-table tbody tr:last-child td { border-bottom: none; }
+.ktm-cost-total { font-weight: 600; color: #111827; }
+.ktm-cost-table tfoot tr { border-top: 2px solid #e5e7eb; }
+.ktm-cost-footer { font-size: 0.8rem; font-weight: 700; color: #111827; text-align: left; }
+.ktm-cost-grand  { font-size: 1rem; font-weight: 800; color: #111827; }
+
+/* ── Description (HTML GLPI) ── */
+.ktm-content {
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.65;
+  background: #fafafa;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+}
+.ktm-content p    { margin: 0 0 0.5em; }
+.ktm-content p:last-child { margin: 0; }
+
+/* ── Footer ── */
+.ktm-footer {
+  padding-top: 0.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+.ktm-edit-btn {
+  padding: 0.5rem 1.1rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ktm-edit-btn:hover { background: #e2e8f0; }
