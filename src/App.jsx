@@ -12,6 +12,8 @@ import ComputerDetail from './components/ComputerDetail'
 import MonitorDetail from './components/MonitorDetail'
 import ImportPage from './pages/ImportPage'
 import ResetPage from './pages/ResetPage'
+import TestSQLitePage from './pages/TestSQLitePage'
+import TestKanbanPage from './pages/TestKanbanPage'
 import FrontApp from './front/FrontApp'
 import './App.css'
 
@@ -51,6 +53,8 @@ function App() {
         <Route path="/monitors/:id"    element={<MonitorDetail />} />
         <Route path="/import"          element={<ImportPage />} />
         <Route path="/reset"           element={<ResetPage />} />
+        <Route path="/test-sqlite"     element={<TestSQLitePage />} />
+        <Route path="/test-kanban"     element={<TestKanbanPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

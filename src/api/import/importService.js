@@ -178,33 +178,18 @@ const importManufacturers = async (rows, registry, onProgress) => {
   return results
 }
 
-// ─── Import MODÈLES ORDINATEURS ───────────────────────────────────────────────
+// ─── Import générique : modèles d'un type d'actif ─────────────────────────────
+// Remplace importComputerModels, importMonitorModels, etc.
 
-const importComputerModels = async (rows, registry, onProgress) => {
-  const computerRows = rows.filter(r => getCi(r, 'Item_Type').toLowerCase() === 'computer')
-  const unique = [...new Set(computerRows.map(r => getCi(r, 'Model')).filter(Boolean))]
+const _knownCsvTypes = new Set(Object.values(KNOWN_ITEM_TYPES).map(t => t.csvType))
+
+const importAssetModels = async (itemTypeCfg, rows, registry, onProgress) => {
+  const filteredRows = rows.filter(r => getCi(r, 'Item_Type').toLowerCase() === itemTypeCfg.csvType)
+  const unique = [...new Set(filteredRows.map(r => getCi(r, 'Model')).filter(Boolean))]
   const results = { success: 0, errors: [] }
   for (let i = 0; i < unique.length; i++) {
     try {
-      await upsertDropdown('Dropdowns/ComputerModel', unique[i], 'computerModels', registry)
-      results.success++
-    } catch (err) {
-      results.errors.push({ line: i + 1, message: err.message, row: { Model: unique[i] } })
-    }
-    onProgress?.(Math.round(((i + 1) / unique.length) * 100), results)
-  }
-  return results
-}
-
-// ─── Import MODÈLES MONITEURS ─────────────────────────────────────────────────
-
-const importMonitorModels = async (rows, registry, onProgress) => {
-  const monitorRows = rows.filter(r => getCi(r, 'Item_Type').toLowerCase() === 'monitor')
-  const unique = [...new Set(monitorRows.map(r => getCi(r, 'Model')).filter(Boolean))]
-  const results = { success: 0, errors: [] }
-  for (let i = 0; i < unique.length; i++) {
-    try {
-      await upsertDropdown('Dropdowns/MonitorModel', unique[i], 'monitorModels', registry)
+      await upsertDropdown(itemTypeCfg.modelGlpiPath, unique[i], itemTypeCfg.modelModule, registry)
       results.success++
     } catch (err) {
       results.errors.push({ line: i + 1, message: err.message, row: { Model: unique[i] } })
@@ -252,23 +237,36 @@ const importUsers = async (rows, registry, onProgress) => {
   return results
 }
 
-// ─── Import ORDINATEURS ───────────────────────────────────────────────────────
+// ─── Import générique : actifs d'un type ─────────────────────────────────────
+// Remplace importComputers, importMonitors, etc.
+// itemType  : clé GLPI du type (ex: 'Computer') — pour le registre et Item_Ticket.
+// isLast    : si true, collecte les warnings pour les Item_Type CSV inconnus
+//             (un seul type les rapporte pour éviter les doublons).
 
-const importComputers = async (rows, registry, onProgress) => {
-  const computerRows = rows.filter(r => getCi(r, 'Item_Type').toLowerCase() === 'computer')
-  const results = { success: 0, errors: [], warnings: [] }
+const importAssetType = async (itemTypeCfg, itemType, rows, registry, onProgress, { isLast = false } = {}) => {
+  const filteredRows = rows.filter(r => getCi(r, 'Item_Type').toLowerCase() === itemTypeCfg.csvType)
 
-  // Récupérer tous les ordinateurs existants une seule fois (upsert)
-  const allExisting = await getItems('Assets/Computer', { range: '0-999' }).catch(() => [])
+  const warnings = isLast
+    ? rows
+        .filter(r => { const t = getCi(r, 'Item_Type'); return t && !_knownCsvTypes.has(t.toLowerCase()) })
+        .map(r => ({ message: `Item_Type "${getCi(r, 'Item_Type')}" non reconnu dans GLPI — ligne ignorée`, row: r }))
+    : []
 
-  for (let i = 0; i < computerRows.length; i++) {
-    const row = computerRows[i]
+  const results = { success: 0, errors: [], warnings }
+
+  const allExisting = await getItems(itemTypeCfg.glpiPath, { range: '0-999' }).catch(() => [])
+
+  for (let i = 0; i < filteredRows.length; i++) {
+    const row = filteredRows[i]
     const name = getCi(row, 'Name')
-    if (!name) { results.errors.push({ line: i + 2, message: 'Nom manquant', row }); onProgress?.(Math.round(((i + 1) / computerRows.length) * 100), results); continue }
+    if (!name) {
+      results.errors.push({ line: i + 2, message: 'Nom manquant', row })
+      onProgress?.(Math.round(((i + 1) / filteredRows.length) * 100), results)
+      continue
+    }
 
     try {
       const body = { name }
-
       const status   = getCi(row, 'Status')
       const location = getCi(row, 'Location')
       const manuf    = getCi(row, 'Manufacturer')
@@ -276,19 +274,12 @@ const importComputers = async (rows, registry, onProgress) => {
       const serial   = getCi(row, 'Inventory_Number')
       const user     = getCi(row, 'User')
 
-      const stateId  = registry.get('states',         status)?.id
-      const locId    = registry.get('locations',      location)?.id
-      const manufId  = registry.get('manufacturers',  manuf)?.id
-      const modelId  = registry.get('computerModels', model)?.id
-      const userId   = registry.get('users',          user)?.id
-
-      // GLPI v2 utilise des noms courts (sans suffixe _id)
-      if (status)   body.status       = stateId   ?? undefined
-      if (location) body.location     = locId     ?? undefined
-      if (manuf)    body.manufacturer = manufId   ?? undefined
-      if (model)    body.model        = modelId   ?? undefined
+      if (status)   body.status       = registry.get('states',                status)?.id   ?? undefined
+      if (location) body.location     = registry.get('locations',             location)?.id ?? undefined
+      if (manuf)    body.manufacturer = registry.get('manufacturers',         manuf)?.id    ?? undefined
+      if (model)    body.model        = registry.get(itemTypeCfg.modelModule, model)?.id    ?? undefined
       if (serial)   body.otherserial  = serial
-      if (user)     body.user         = userId    ?? undefined
+      if (user)     body.user         = registry.get('users',                 user)?.id     ?? undefined
 
       const existing = allExisting.find(c => {
         if (c.is_deleted) return false
@@ -298,92 +289,24 @@ const importComputers = async (rows, registry, onProgress) => {
 
       let id
       if (existing) {
-        await updateItem('Assets/Computer', existing.id, body)
+        await updateItem(itemTypeCfg.glpiPath, existing.id, body)
         id = String(existing.id)
       } else {
-        const created = await createItem('Assets/Computer', body)
+        const created = await createItem(itemTypeCfg.glpiPath, body)
         id = String(created?.id ?? created)
       }
 
-      registry.set('computers', name, { id, itemtype: 'Computer' })
-      registry.set('assets',    name, { id, itemtype: 'Computer' })
+      registry.set(itemTypeCfg.registryModule, name, { id, itemtype: itemType })
+      registry.set('assets',                   name, { id, itemtype: itemType })
       results.success++
     } catch (err) {
-      results.errors.push({ line: i + 2, message: err.response?.data ? JSON.stringify(err.response.data).slice(0, 200) : err.message, row })
-    }
-    onProgress?.(Math.round(((i + 1) / computerRows.length) * 100), results)
-  }
-  return results
-}
-
-// ─── Import MONITEURS ─────────────────────────────────────────────────────────
-
-const importMonitors = async (rows, registry, onProgress) => {
-  const monitorRows = rows.filter(r => {
-    const t = getCi(r, 'Item_Type').toLowerCase()
-    return t === 'monitor'
-  })
-
-  // Lignes avec Item_Type inconnu → warnings
-  const unknownRows = rows.filter(r => {
-    const t = getCi(r, 'Item_Type')
-    if (!t) return false
-    return !KNOWN_ITEM_TYPES[t]
-  })
-
-  const results = { success: 0, errors: [], warnings: unknownRows.map(r => ({
-    message: `Item_Type "${getCi(r, 'Item_Type')}" non reconnu dans GLPI — ligne ignorée`,
-    row: r,
-  })) }
-
-  // Récupérer tous les moniteurs existants une seule fois (upsert)
-  const allExisting = await getItems('Assets/Monitor', { range: '0-999' }).catch(() => [])
-
-  for (let i = 0; i < monitorRows.length; i++) {
-    const row = monitorRows[i]
-    const name = getCi(row, 'Name')
-    if (!name) { results.errors.push({ line: i + 2, message: 'Nom manquant', row }); onProgress?.(Math.round(((i + 1) / monitorRows.length) * 100), results); continue }
-
-    try {
-      const body = { name }
-
-      const status   = getCi(row, 'Status')
-      const location = getCi(row, 'Location')
-      const manuf    = getCi(row, 'Manufacturer')
-      const model    = getCi(row, 'Model')
-      const serial   = getCi(row, 'Inventory_Number')
-      const user     = getCi(row, 'User')
-
-      // GLPI v2 utilise des noms courts (sans suffixe _id)
-      if (status)   body.status       = registry.get('states',        status)?.id   ?? undefined
-      if (location) body.location     = registry.get('locations',     location)?.id ?? undefined
-      if (manuf)    body.manufacturer = registry.get('manufacturers', manuf)?.id    ?? undefined
-      if (model)    body.model        = registry.get('monitorModels', model)?.id    ?? undefined
-      if (serial)   body.otherserial  = serial
-      if (user)     body.user         = registry.get('users',         user)?.id     ?? undefined
-
-      const existing = allExisting.find(m => {
-        if (m.is_deleted) return false
-        const n = typeof m.name === 'object' ? (m.name?.name ?? '') : String(m.name ?? '')
-        return n.toLowerCase() === name.toLowerCase()
+      results.errors.push({
+        line: i + 2,
+        message: err.response?.data ? JSON.stringify(err.response.data).slice(0, 200) : err.message,
+        row,
       })
-
-      let id
-      if (existing) {
-        await updateItem('Assets/Monitor', existing.id, body)
-        id = String(existing.id)
-      } else {
-        const created = await createItem('Assets/Monitor', body)
-        id = String(created?.id ?? created)
-      }
-
-      registry.set('monitors', name, { id, itemtype: 'Monitor' })
-      registry.set('assets',   name, { id, itemtype: 'Monitor' })
-      results.success++
-    } catch (err) {
-      results.errors.push({ line: i + 2, message: err.response?.data ? JSON.stringify(err.response.data).slice(0, 200) : err.message, row })
     }
-    onProgress?.(Math.round(((i + 1) / monitorRows.length) * 100), results)
+    onProgress?.(Math.round(((i + 1) / filteredRows.length) * 100), results)
   }
   return results
 }
@@ -545,23 +468,21 @@ export const importImages = async (zipFile, onProgress) => {
     return results
   }
 
-  // 2. Récupérer tous les actifs GLPI (Computer + Monitor)
-  const [allComputers, allMonitors] = await Promise.all([
-    getItems('Assets/Computer', { range: '0-999' }).catch(() => []),
-    getItems('Assets/Monitor',  { range: '0-999' }).catch(() => []),
-  ])
+  // 2. Récupérer tous les actifs GLPI depuis KNOWN_ITEM_TYPES
+  const allAssets = await Promise.all(
+    Object.entries(KNOWN_ITEM_TYPES).map(([itemType, t]) =>
+      getItems(t.glpiPath, { range: '0-999' }).catch(() => [])
+        .then(items => ({ itemType, items }))
+    )
+  )
 
   const assetMap = new Map()
-  for (const c of allComputers) {
-    if (!c.is_deleted) {
-      const n = toAssetName(c.name)
-      if (n) assetMap.set(n.toLowerCase(), { id: c.id, itemtype: 'Computer' })
-    }
-  }
-  for (const m of allMonitors) {
-    if (!m.is_deleted) {
-      const n = toAssetName(m.name)
-      if (n) assetMap.set(n.toLowerCase(), { id: m.id, itemtype: 'Monitor' })
+  for (const { itemType, items } of allAssets) {
+    for (const asset of items) {
+      if (!asset.is_deleted) {
+        const n = toAssetName(asset.name)
+        if (n) assetMap.set(n.toLowerCase(), { id: asset.id, itemtype: itemType })
+      }
     }
   }
 
@@ -612,18 +533,30 @@ export const importImages = async (zipFile, onProgress) => {
 }
 
 // ─── Routeur des sous-modules ─────────────────────────────────────────────────
+// Les entrées pour les types d'actifs sont dérivées de KNOWN_ITEM_TYPES.
+
+const _assetTypeEntries = Object.entries(KNOWN_ITEM_TYPES)
+const _lastAssetIdx     = _assetTypeEntries.length - 1
 
 const SUB_MODULE_IMPORTERS = {
-  states:         importStates,
-  locations:      importLocations,
-  manufacturers:  importManufacturers,
-  computerModels: importComputerModels,
-  monitorModels:  importMonitorModels,
-  users:          importUsers,
-  computers:      importComputers,
-  monitors:       importMonitors,
-  tickets:        importTickets,
-  ticketCosts:    importTicketCosts,
+  states:        importStates,
+  locations:     importLocations,
+  manufacturers: importManufacturers,
+  ...Object.fromEntries(
+    _assetTypeEntries.map(([, t]) => [
+      t.modelModule,
+      (rows, reg, cb) => importAssetModels(t, rows, reg, cb),
+    ])
+  ),
+  users: importUsers,
+  ...Object.fromEntries(
+    _assetTypeEntries.map(([itemType, t], i) => [
+      t.registryModule,
+      (rows, reg, cb) => importAssetType(t, itemType, rows, reg, cb, { isLast: i === _lastAssetIdx }),
+    ])
+  ),
+  tickets:     importTickets,
+  ticketCosts: importTicketCosts,
 }
 
 // ─── Orchestrateur principal ──────────────────────────────────────────────────

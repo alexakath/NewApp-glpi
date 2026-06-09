@@ -1,5 +1,39 @@
 import axios from 'axios'
-import { getAccessToken, logout } from './auth'
+import { getAccessToken, logout, login } from './auth'
+
+// Évite les appels multiples si plusieurs requêtes échouent en même temps avec 401.
+let _sessionHandling = false
+
+// Gère l'expiration de session selon le contexte :
+//   - back-office (/*)     → redirige vers /login
+//   - portail front (/front/*) → re-authentification silencieuse puis rechargement
+const handleSessionExpired = () => {
+  if (_sessionHandling) return
+  _sessionHandling = true
+  logout()
+
+  if (window.location.pathname.startsWith('/front')) {
+    const code = import.meta.env.VITE_DEFAULT_CODE ?? ''
+    login(code)
+      .then(() => window.location.reload())
+      .catch(() => window.location.replace('/login'))
+  } else {
+    window.location.replace('/login')
+  }
+}
+
+// Intercepte tous les 401 retournés par le serveur GLPI.
+// Exception : la route /token (échec de login → message d'erreur dans LoginPage).
+axios.interceptors.response.use(
+  res => res,
+  err => {
+    const url = err.config?.url ?? ''
+    if (err.response?.status === 401 && !url.includes('/token')) {
+      handleSessionExpired()
+    }
+    return Promise.reject(err)
+  }
+)
 
 // ═══════════════════════════════════════════════════════════════════
 //  BLOC v2 — API HL GLPI  (/api.php/v2.3)
@@ -15,12 +49,13 @@ const DEFAULT_PARAMS = {
   range: '0-99',            // limite à 100 résultats (suffisant pour nos listes)
 }
 
-// Construit le header Authorization à partir du token OAuth2 stocké
+// Construit le header Authorization à partir du token OAuth2 stocké.
+// Si le token est absent ou expiré, déclenche handleSessionExpired (ne retourne jamais).
 const getHeaders = async () => {
   const token = await getAccessToken()
   if (!token) {
-    logout()
-    throw new Error('Session expirée — veuillez vous reconnecter.')
+    handleSessionExpired()
+    throw new Error('SESSION_EXPIRED') // empêche la suite de s'exécuter
   }
   return { Authorization: `Bearer ${token}` }
 }

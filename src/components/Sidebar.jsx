@@ -56,6 +56,19 @@ const MENU_GROUPS = [
       },
     ],
   },
+  {
+    module: 'Tests',
+    items: [
+      {
+        to: '/test-sqlite', label: 'Test SQLite',
+        icon: <SVG><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></SVG>,
+      },
+      {
+        to: '/test-kanban', label: 'Test Kanban',
+        icon: <SVG><rect x="3" y="3" width="5" height="18" rx="1.5"/><rect x="10" y="3" width="5" height="12" rx="1.5"/><rect x="17" y="3" width="5" height="15" rx="1.5"/></SVG>,
+      },
+    ],
+  },
 ]
 
 function Sidebar({ onLogout }) {
