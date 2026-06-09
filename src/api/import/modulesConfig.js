@@ -1,38 +1,81 @@
-// ─── Mapping Item_Type CSV → module GLPI ─────────────────────────────────────
-// Source de vérité unique pour les types d'actifs.
-// Ajouter une entrée ici propage automatiquement le type dans toute la chaîne
-// d'import : sous-modules, ordre d'exécution, dépendances, détection images.
+// ─── Source de vérité unique pour les types d'actifs ─────────────────────────
+//
+// Pour ajouter un nouveau type : UNE SEULE LIGNE dans ASSET_TYPE_META.
+// Tout le reste (import, dashboard, plan, progress...) se dérive automatiquement.
+//
+// Convention GLPI v2 :
+//   glpiPath  → Assets/{ItemType}
+//   modelPath → Dropdowns/{ItemType}Model
+//
+// Si un type s'écarte de cette convention, ajouter une entrée dans GLPI_PATH_OVERRIDES.
 
-export const KNOWN_ITEM_TYPES = {
-  Computer: {
-    csvType:        'computer',                    // valeur CSV (insensible à la casse)
-    glpiPath:       'Assets/Computer',
-    modelGlpiPath:  'Dropdowns/ComputerModel',
-    modelModule:    'computerModels',
-    registryModule: 'computers',
-    label:          'Ordinateurs',
-    modelLabel:     'Modèles Ordinateurs',
-    color:          '#3b82f6',
-    modelColor:     '#0ea5e9',
-    icon:           'ti-device-laptop',
-    modelIcon:      'ti-cpu',
-  },
-  Monitor: {
-    csvType:        'monitor',
-    glpiPath:       'Assets/Monitor',
-    modelGlpiPath:  'Dropdowns/MonitorModel',
-    modelModule:    'monitorModels',
-    registryModule: 'monitors',
-    label:          'Moniteurs',
-    modelLabel:     'Modèles Moniteurs',
-    color:          '#10b981',
-    modelColor:     '#06b6d4',
-    icon:           'ti-device-desktop',
-    modelIcon:      'ti-device-desktop',
-  },
+// hasModel: false → pas de dropdown Dropdowns/{Type}Model dans GLPI pour ce type
+export const ASSET_TYPE_META = {
+  //                          label affichée           couleur     icône Tabler            modèle?
+  Computer:           { label: 'Ordinateurs',        color: '#3b82f6', icon: 'ti-device-laptop'  },
+  Monitor:            { label: 'Moniteurs',           color: '#10b981', icon: 'ti-device-desktop' },
+  Printer:            { label: 'Imprimantes',         color: '#f59e0b', icon: 'ti-printer'        },
+  Phone:              { label: 'Téléphones',          color: '#8b5cf6', icon: 'ti-phone'          },
+  NetworkEquipment:   { label: 'Équip. réseau',       color: '#06b6d4', icon: 'ti-network'        },
+  Peripheral:         { label: 'Périphériques',       color: '#ec4899', icon: 'ti-mouse'          },
+  Enclosure:          { label: 'Châssis',             color: '#64748b', icon: 'ti-server'         },
+  PDU:                { label: 'PDU',                 color: '#84cc16', icon: 'ti-plug',           hasModel: false },
+  PassiveDCEquipment: { label: 'Équip. passif DC',    color: '#94a3b8', icon: 'ti-cable',          hasModel: false },
+  Cable:              { label: 'Câbles',              color: '#a78bfa', icon: 'ti-plug-connected', hasModel: false },
+  Socket:             { label: 'Prises',              color: '#f472b6', icon: 'ti-plug',           hasModel: false },
+  Appliance:          { label: 'Appliances',          color: '#34d399', icon: 'ti-server-2',       hasModel: false },
+  Software:           { label: 'Logiciels',           color: '#60a5fa', icon: 'ti-apps',           hasModel: false },
+  SoftwareLicense:    { label: 'Licences logiciels',  color: '#f97316', icon: 'ti-license',        hasModel: false },
+  Certificate:        { label: 'Certificats',         color: '#4ade80', icon: 'ti-certificate',    hasModel: false },
+  Rack:               { label: 'Baies',               color: '#e2e8f0', icon: 'ti-server',         hasModel: false },
 }
 
-// ─── Mappings statut / priorité / type tickets (CSV anglais → entier GLPI) ───
+// Exceptions aux paths GLPI conventionnels Assets/{Type}
+const GLPI_PATH_OVERRIDES = {}
+
+// ─── Générateur de config par convention ─────────────────────────────────────
+// buildItemTypeConfig('Printer') → { glpiPath:'Assets/Printer', modelModule:'printer_models', ... }
+// Fonctionne pour tout type GLPI standard, connu ou inconnu dans ASSET_TYPE_META.
+
+export const buildItemTypeConfig = (itemType) => {
+  const meta     = ASSET_TYPE_META[itemType] ?? {}
+  const slug     = itemType.toLowerCase()
+  const hasModel = meta.hasModel !== false  // true par défaut, false si explicitement désactivé
+  return {
+    itemType,
+    csvType:        slug,
+    glpiPath:       GLPI_PATH_OVERRIDES[itemType] ?? `Assets/${itemType}`,
+    modelGlpiPath:  hasModel ? `Dropdowns/${itemType}Model` : null,
+    modelModule:    hasModel ? `${slug}_models` : null,
+    registryModule: slug,
+    label:          meta.label ?? itemType,
+    modelLabel:     `Modèles ${meta.label ?? itemType}`,
+    color:          meta.color ?? '#64748b',
+    modelColor:     '#94a3b8',
+    icon:           meta.icon  ?? 'ti-device-desktop',
+    modelIcon:      'ti-cpu',
+  }
+}
+
+// ─── KNOWN_ITEM_TYPES — généré depuis ASSET_TYPE_META ─────────────────────────
+// Ne jamais modifier manuellement. Ajouter dans ASSET_TYPE_META suffit.
+
+export const KNOWN_ITEM_TYPES = Object.fromEntries(
+  Object.keys(ASSET_TYPE_META).map(t => [t, buildItemTypeConfig(t)])
+)
+
+// Lookup insensible à la casse : "computer" → "Computer", "pdu" → "PDU"
+const _csvToItemType = Object.fromEntries(
+  Object.keys(ASSET_TYPE_META).map(t => [t.toLowerCase(), t])
+)
+
+// Normalise une valeur CSV Item_Type → clé exacte GLPI
+export const normalizeItemType = (csvValue) => {
+  const lower = String(csvValue ?? '').trim().toLowerCase()
+  return _csvToItemType[lower] ?? (lower.charAt(0).toUpperCase() + lower.slice(1))
+}
+
+// ─── Mappings statut / priorité / type tickets ────────────────────────────────
 
 export const TICKET_STATUS_MAP = {
   'new': 1, 'nouveau': 1,
@@ -57,8 +100,6 @@ export const TICKET_TYPE_MAP = {
 }
 
 // ─── Modules détectables (niveau fichier) ────────────────────────────────────
-// La détection se fait sur les headers CSV (scoring par poids).
-// Un fichier peut contenir un ou plusieurs modules.
 
 export const MODULES_CONFIG = {
   assets: {
@@ -76,7 +117,6 @@ export const MODULES_CONFIG = {
     },
     detectionThreshold: 5,
   },
-
   tickets: {
     label: 'Tickets',
     importOrder: 2,
@@ -89,7 +129,6 @@ export const MODULES_CONFIG = {
     },
     detectionThreshold: 4,
   },
-
   ticketCosts: {
     label: 'Coûts tickets',
     importOrder: 3,
@@ -105,16 +144,15 @@ export const MODULES_CONFIG = {
 
 export const MODULE_KEYS = Object.keys(MODULES_CONFIG)
 
-// ─── Sous-modules ─────────────────────────────────────────────────────────────
-// Les entrées spécifiques aux types d'actifs sont dérivées de KNOWN_ITEM_TYPES.
-// Les autres (statuts, localisations, fabricants, utilisateurs, tickets…)
-// sont déclarés statiquement.
+// ─── Sous-modules — tout dérivé de KNOWN_ITEM_TYPES ──────────────────────────
 
 const _assetModelMeta = Object.fromEntries(
-  Object.values(KNOWN_ITEM_TYPES).map(t => [
-    t.modelModule,
-    { label: t.modelLabel, color: t.modelColor, icon: t.modelIcon, parentModule: 'assets' },
-  ])
+  Object.values(KNOWN_ITEM_TYPES)
+    .filter(t => t.modelModule)
+    .map(t => [
+      t.modelModule,
+      { label: t.modelLabel, color: t.modelColor, icon: t.modelIcon, parentModule: 'assets' },
+    ])
 )
 const _assetMeta = Object.fromEntries(
   Object.values(KNOWN_ITEM_TYPES).map(t => [
@@ -135,36 +173,28 @@ export const SUB_MODULE_META = {
   images:        { label: 'Images',        color: '#f97316', icon: 'ti-photo',            parentModule: 'images' },
 }
 
-// Ordre strict d'exécution — dépendances FK respectées :
-// modèles avant actifs, actifs avant tickets
+// Ordre canonique de référence pour le tri dans buildImportPlan
 export const SUB_MODULE_ORDER = [
   'states', 'locations', 'manufacturers',
-  ...Object.values(KNOWN_ITEM_TYPES).map(t => t.modelModule),
+  ...Object.values(KNOWN_ITEM_TYPES).filter(t => t.modelModule).map(t => t.modelModule),
   'users',
   ...Object.values(KNOWN_ITEM_TYPES).map(t => t.registryModule),
   'tickets', 'ticketCosts',
 ]
 
-// Dépendances affichées dans le plan UI (pas d'impact sur l'exécution)
 export const SUB_MODULE_DEPS = {
   ...Object.fromEntries(
     Object.values(KNOWN_ITEM_TYPES).map(t => [
       t.registryModule,
-      ['states', 'locations', 'manufacturers', t.modelModule, 'users'],
+      ['states', 'locations', 'manufacturers', ...(t.modelModule ? [t.modelModule] : []), 'users'],
     ])
   ),
   tickets:     Object.values(KNOWN_ITEM_TYPES).map(t => t.registryModule),
   ticketCosts: ['tickets'],
 }
 
-// Expand un module détecté (niveau fichier) en sous-modules réels
+// expandModule — assets géré dynamiquement dans buildImportPlan (filtre par CSV)
 export const expandModule = (moduleKey) => {
-  if (moduleKey === 'assets') return [
-    'states', 'locations', 'manufacturers',
-    ...Object.values(KNOWN_ITEM_TYPES).map(t => t.modelModule),
-    'users',
-    ...Object.values(KNOWN_ITEM_TYPES).map(t => t.registryModule),
-  ]
   if (moduleKey === 'tickets')     return ['tickets']
   if (moduleKey === 'ticketCosts') return ['ticketCosts']
   return []

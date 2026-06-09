@@ -2,7 +2,7 @@ import Papa from 'papaparse'
 import JSZip from 'jszip'
 import { getItems, createItem, updateItem, postSubItem, createV1Item, withV1Session, uploadAndLinkDocumentV1 } from '../glpi'
 import { ImportRegistry } from './detectModules'
-import { KNOWN_ITEM_TYPES, TICKET_STATUS_MAP, TICKET_PRIORITY_MAP, TICKET_TYPE_MAP, SUB_MODULE_ORDER, expandModule } from './modulesConfig'
+import { KNOWN_ITEM_TYPES, TICKET_STATUS_MAP, TICKET_PRIORITY_MAP, TICKET_TYPE_MAP, SUB_MODULE_ORDER, expandModule, buildItemTypeConfig, normalizeItemType } from './modulesConfig'
 import { MODULES_CONFIG } from './modulesConfig'
 
 // ─── CSV ──────────────────────────────────────────────────────────────────────
@@ -184,6 +184,7 @@ const importManufacturers = async (rows, registry, onProgress) => {
 const _knownCsvTypes = new Set(Object.values(KNOWN_ITEM_TYPES).map(t => t.csvType))
 
 const importAssetModels = async (itemTypeCfg, rows, registry, onProgress) => {
+  if (!itemTypeCfg.modelGlpiPath) return { success: 0, errors: [] }
   const filteredRows = rows.filter(r => getCi(r, 'Item_Type').toLowerCase() === itemTypeCfg.csvType)
   const unique = [...new Set(filteredRows.map(r => getCi(r, 'Model')).filter(Boolean))]
   const results = { success: 0, errors: [] }
@@ -568,8 +569,21 @@ export const importMultiModule = async (csvPlan, onSubModuleProgress, onSubModul
   const globalReport = {}
 
   for (const { subModuleKey, rows } of csvPlan) {
-    const importer = SUB_MODULE_IMPORTERS[subModuleKey]
-    if (!importer) continue
+    let importer = SUB_MODULE_IMPORTERS[subModuleKey]
+
+    // Fallback pour les types non déclarés dans ASSET_TYPE_META (convention automatique)
+    if (!importer) {
+      if (subModuleKey.endsWith('_models')) {
+        const slug     = subModuleKey.slice(0, -7)          // 'printer_models' → 'printer'
+        const itemType = normalizeItemType(slug)
+        const config   = buildItemTypeConfig(itemType)
+        importer = (r, reg, cb) => importAssetModels(config, r, reg, cb)
+      } else {
+        const itemType = normalizeItemType(subModuleKey)
+        const config   = buildItemTypeConfig(itemType)
+        importer = (r, reg, cb) => importAssetType(config, itemType, r, reg, cb)
+      }
+    }
 
     const results = await importer(
       rows,
@@ -586,13 +600,33 @@ export const importMultiModule = async (csvPlan, onSubModuleProgress, onSubModul
 
 // ─── Construction du plan (appelé depuis ImportPage) ─────────────────────────
 // detectedEntries : [{ moduleKey, rows, fileName, fileId }]
-// Retourne les sous-modules triés, prêts à passer à importMultiModule.
+// Pour le module 'assets' : découvre les types depuis la colonne Item_Type du CSV
+// (uniquement les types présents → pas d'étapes vides dans le plan).
 
 export const buildImportPlan = (detectedEntries) => {
   const subModuleMap = {}
 
   for (const { moduleKey, rows, fileName, fileId } of detectedEntries) {
-    const subKeys = expandModule(moduleKey)
+    let subKeys
+
+    if (moduleKey === 'assets') {
+      // Types réellement présents dans ce CSV
+      const presentTypes = [...new Set(
+        rows.map(r => getCi(r, 'Item_Type')).filter(Boolean)
+      )].map(raw => normalizeItemType(raw))
+
+      const typeConfigs = presentTypes.map(t => KNOWN_ITEM_TYPES[t] ?? buildItemTypeConfig(t))
+
+      subKeys = [
+        'states', 'locations', 'manufacturers',
+        ...typeConfigs.filter(t => t.modelModule).map(t => t.modelModule),
+        'users',
+        ...typeConfigs.map(t => t.registryModule),
+      ]
+    } else {
+      subKeys = expandModule(moduleKey)
+    }
+
     for (const subKey of subKeys) {
       if (!subModuleMap[subKey]) {
         subModuleMap[subKey] = { subModuleKey: subKey, rows, sourceModuleKey: moduleKey, fileName, fileId }
@@ -600,5 +634,10 @@ export const buildImportPlan = (detectedEntries) => {
     }
   }
 
-  return SUB_MODULE_ORDER.filter(k => subModuleMap[k]).map(k => subModuleMap[k])
+  // Ordre canonique en premier, puis les types dynamiques non encore connus
+  const canonicalSet = new Set(SUB_MODULE_ORDER)
+  return [
+    ...SUB_MODULE_ORDER.filter(k => subModuleMap[k]),
+    ...Object.keys(subModuleMap).filter(k => !canonicalSet.has(k)),
+  ].map(k => subModuleMap[k])
 }

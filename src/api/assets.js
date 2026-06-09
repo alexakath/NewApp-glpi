@@ -1,22 +1,21 @@
 import { getItems, getItem } from './glpi'
+import { ASSET_TYPE_META, buildItemTypeConfig } from './import/modulesConfig'
 
-// ─── Registre des types d'actifs affichés dans le front-office ───────────────
-// Pour ajouter un type GLPI supplémentaire (ex. "Cable", "Software"), il suffit
-// d'ajouter une ligne ici — aucune autre modification n'est nécessaire pour que
-// l'actif apparaisse dans la liste, les filtres et la page de détail générique.
-//
-// glpiPath    : chemin v2 de l'API  → GET /api.php/v2.3/{glpiPath}
-// label       : libellé singulier (badge de carte, fil d'ariane)
-// labelPlural : libellé pluriel (titre de section, option de filtre)
+// ─── ASSET_TYPES — dérivé de ASSET_TYPE_META (source de vérité unique) ────────
+// Ajouter un type dans ASSET_TYPE_META met à jour automatiquement le dashboard.
 
-export const ASSET_TYPES = {
-  Computer:         { glpiPath: 'Assets/Computer',         label: 'Ordinateur',        labelPlural: 'Ordinateurs' },
-  Monitor:          { glpiPath: 'Assets/Monitor',          label: 'Moniteur',          labelPlural: 'Moniteurs' },
-  Peripheral:       { glpiPath: 'Assets/Peripheral',       label: 'Périphérique',      labelPlural: 'Périphériques' },
-  Printer:          { glpiPath: 'Assets/Printer',          label: 'Imprimante',        labelPlural: 'Imprimantes' },
-  NetworkEquipment: { glpiPath: 'Assets/NetworkEquipment', label: 'Équip. réseau',     labelPlural: 'Équipements réseau' },
-  Phone:            { glpiPath: 'Assets/Phone',            label: 'Téléphone',         labelPlural: 'Téléphones' },
-}
+export const ASSET_TYPES = Object.fromEntries(
+  Object.entries(ASSET_TYPE_META).map(([itemType, meta]) => {
+    const cfg = buildItemTypeConfig(itemType)
+    return [itemType, {
+      glpiPath:    cfg.glpiPath,
+      label:       meta.label,
+      labelPlural: meta.label,
+      color:       meta.color ?? '#64748b',
+      icon:        meta.icon  ?? 'ti-device-desktop',
+    }]
+  })
+)
 
 export const ASSET_TYPE_KEYS = Object.keys(ASSET_TYPES)
 
