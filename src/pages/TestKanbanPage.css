@@ -1,0 +1,174 @@
+.tkan-page {
+  padding: 2rem;
+  max-width: 960px;
+}
+
+.tkan-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.25rem;
+}
+.tkan-sub {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 1.25rem;
+}
+
+.tkan-badge {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid;
+  margin-bottom: 2rem;
+}
+.tkan-badge.ok      { background: #effaf3; color: #2f7d52; border-color: #cdedd9; }
+.tkan-badge.err     { background: #fdf2f2; color: #a23a3a; border-color: #f6d3d3; }
+.tkan-badge.pending { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+
+/* ── Cards ── */
+.tkan-cards {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.tkan-card {
+  flex: 1;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-top: 4px solid #94a3b8;
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+
+.tkan-card-preview {
+  height: 40px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.tkan-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.tkan-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tkan-color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.tkan-color-input {
+  width: 40px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+  background: #fff;
+}
+.tkan-color-hex {
+  font-size: 0.82rem;
+  color: #6b7280;
+  font-family: monospace;
+}
+
+.tkan-text-input {
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #111827;
+  background: #f9fafb;
+  box-sizing: border-box;
+}
+.tkan-text-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  background: #fff;
+}
+
+.tkan-btn {
+  margin-top: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 7px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: #6366f1;
+  color: #fff;
+  transition: background 0.15s, opacity 0.15s;
+}
+.tkan-btn:disabled         { opacity: 0.45; cursor: not-allowed; }
+.tkan-btn:not(:disabled):hover { background: #4f46e5; }
+.tkan-btn--ok  { background: #16a34a; }
+.tkan-btn--err { background: #dc2626; }
+
+/* ── Aperçu ── */
+.tkan-preview-section { margin-top: 0.5rem; }
+.tkan-preview-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.75rem;
+}
+
+.tkan-preview-board {
+  display: flex;
+  gap: 1rem;
+}
+
+.tkan-preview-col {
+  flex: 1;
+  min-width: 160px;
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: background 0.2s;
+}
+
+.tkan-preview-col-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 0.4rem;
+}
+.tkan-preview-col-mg {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+}
+.tkan-preview-col-fr {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.tkan-preview-card {
+  background: rgba(255,255,255,0.8);
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.8rem;
+  color: #374151;
+}

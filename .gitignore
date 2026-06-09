@@ -1,5 +1,10 @@
 .env
 
+# Base de données SQLite (générée au runtime)
+server/data/*.db
+server/data/*.db-shm
+server/data/*.db-wal
+
 # Logs
 logs
 *.log

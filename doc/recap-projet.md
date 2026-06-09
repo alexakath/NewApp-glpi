@@ -10,6 +10,47 @@
 
 ---
 
+## 0. But du projet
+
+**NewApp** est une interface web sur mesure construite par-dessus **GLPI** (logiciel
+open-source de gestion de parc informatique et de helpdesk).
+
+### Pourquoi cette application ?
+GLPI est un outil puissant mais son interface native est complexe, dense et pensée
+pour des administrateurs IT. L'objectif de NewApp est de fournir deux interfaces
+adaptées à deux publics distincts, sans modifier GLPI lui-même — tout passe par
+son API REST.
+
+### Ce que l'application fait concrètement
+
+**1 — Back-office (pour l'équipe IT / les administrateurs)**
+- Visualiser et gérer le **parc informatique** (ordinateurs, moniteurs) : liste,
+  détail, statuts, localisations, fabricants, modèles.
+- Gérer les **tickets d'assistance** : liste filtrée, détail, création, modification,
+  suppression, coûts associés (temps, forfait).
+- **Importer des données en masse** depuis des fichiers CSV (actifs, tickets, coûts)
+  et des images depuis un ZIP — en un seul clic, dans le bon ordre, sans se soucier
+  des dépendances entre entités GLPI.
+- **Réinitialiser les données** importées en deux temps sécurisés (mise à la
+  corbeille réversible, puis purge définitive avec confirmation) — utile en
+  phase de test ou avant un déploiement réel.
+
+**2 — Portail front (pour les utilisateurs métier)**
+- Accéder à un **tableau de bord** avec leurs équipements assignés (ordinateur,
+  moniteur) et les tickets en cours les concernant.
+- **Créer et suivre leurs tickets** d'assistance (incident ou demande), avec
+  association à leurs équipements.
+- Interface épurée, pas de complexité technique visible — l'utilisateur se
+  connecte automatiquement (auth silencieuse, pas de page de login).
+
+### Ce que l'application n'est pas
+NewApp ne remplace pas GLPI — elle s'appuie dessus. Toutes les données sont
+stockées dans GLPI ; NewApp est uniquement une couche de présentation et
+d'interaction simplifiée. Les administrateurs GLPI peuvent continuer à utiliser
+l'interface GLPI native en parallèle.
+
+---
+
 ## 1. Où on en est
 
 | Domaine | État |
