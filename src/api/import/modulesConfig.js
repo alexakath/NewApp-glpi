@@ -77,22 +77,33 @@ export const normalizeItemType = (csvValue) => {
 
 // ─── Mappings statut / priorité / type tickets ────────────────────────────────
 
-export const TICKET_STATUS_MAP = {
-  'new': 1, 'nouveau': 1,
-  'in progress': 2, 'assigned': 2, 'en cours': 2,
-  'planned': 3, 'planifié': 3,
-  'pending': 4, 'en attente': 4,
-  'solved': 5, 'résolu': 5,
-  'closed': 6, 'clôturé': 6,
+// ─── Statuts tickets — synonymes connus → ID GLPI fixe (1-6) ─────────────────
+// GLPI ne propose que 6 statuts (fixes). Pour reconnaître un nouveau mot dans
+// les fichiers d'import, il suffit de l'ajouter dans le tableau correspondant.
+export const STATUS_SYNONYMS = {
+  1: ['new', 'nouveau', 'open', 'ouvert'],
+  2: ['in progress (assigned)', 'in progress', 'assigned', 'en cours (attribué)', 'en cours'],
+  3: ['in progress (planned)', 'planned', 'planifié'],
+  4: ['pending', 'en attente'],
+  5: ['solved', 'résolu', 'resolved'],
+  6: ['closed', 'clôturé', 'cloture'],
 }
+export const TICKET_STATUS_MAP = Object.fromEntries(
+  Object.entries(STATUS_SYNONYMS).flatMap(([id, words]) => words.map(w => [w, Number(id)]))
+)
 
-export const TICKET_PRIORITY_MAP = {
-  'very low': 1, 'très basse': 1,
-  'low': 2, 'basse': 2,
-  'medium': 3, 'moyenne': 3,
-  'high': 4, 'haute': 4,
-  'very high': 5, 'très haute': 5,
+// ─── Priorités tickets — synonymes connus → ID GLPI fixe (1-6) ───────────────
+export const PRIORITY_SYNONYMS = {
+  1: ['very low', 'très basse'],
+  2: ['low', 'basse'],
+  3: ['medium', 'moyenne'],
+  4: ['high', 'haute'],
+  5: ['very high', 'très haute'],
+  6: ['critical', 'majeure', 'urgent'],
 }
+export const TICKET_PRIORITY_MAP = Object.fromEntries(
+  Object.entries(PRIORITY_SYNONYMS).flatMap(([id, words]) => words.map(w => [w, Number(id)]))
+)
 
 export const TICKET_TYPE_MAP = {
   'incident': 1,

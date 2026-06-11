@@ -315,7 +315,7 @@ const importAssetType = async (itemTypeCfg, itemType, rows, registry, onProgress
 // ─── Import TICKETS ───────────────────────────────────────────────────────────
 
 const importTickets = async (rows, registry, onProgress) => {
-  const results = { success: 0, errors: [] }
+  const results = { success: 0, errors: [], warnings: [] }
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
@@ -341,10 +341,18 @@ const importTickets = async (rows, registry, onProgress) => {
       if (typeId) body.type = typeId
 
       const statusId = TICKET_STATUS_MAP[statusStr.toLowerCase()]
-      if (statusId) body.status = statusId
+      if (statusId) {
+        body.status = statusId
+      } else if (statusStr) {
+        results.warnings.push({ message: `Statut "${statusStr}" non reconnu (ticket "${titre}") — statut par défaut GLPI appliqué`, row })
+      }
 
       const priorityId = TICKET_PRIORITY_MAP[priorityStr.toLowerCase()]
-      if (priorityId) body.priority = priorityId
+      if (priorityId) {
+        body.priority = priorityId
+      } else if (priorityStr) {
+        results.warnings.push({ message: `Priorité "${priorityStr}" non reconnue (ticket "${titre}") — priorité par défaut GLPI appliquée`, row })
+      }
 
       const created = await createItem('Assistance/Ticket', body)
       const ticketId = String(created?.id ?? created)

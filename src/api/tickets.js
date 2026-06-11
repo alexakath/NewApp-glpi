@@ -14,9 +14,28 @@ export const STATUS_LABELS = {
   6: 'Clôturé',
 }
 
-// Sous-ensemble utilisé dans le Kanban — noms affichés dans l'UI NewApp
-export const KANBAN_STATUS_IDS    = [1, 2, 5]
-export const KANBAN_STATUS_LABELS = { 1: 'Nouveau', 2: 'In progress', 5: 'Terminé' }
+// ── Colonnes Kanban ──────────────────────────────────────────────────────────
+// statusIds  : statuts GLPI regroupés/affichés dans la colonne
+// dropStatus : statut posé sur le ticket quand il est déposé dans la colonne
+//
+// "Terminé" regroupe Résolu (5, posé via le Kanban) et Clôturé (6, valeur
+// "Closed" des fichiers d'import) — les deux représentent un ticket terminé,
+// peu importe comment il y est arrivé. Pour changer ce comportement
+// (ex: Terminé = Clôturé uniquement), il suffit de modifier statusIds ci-dessous.
+export const KANBAN_COLUMNS = {
+  1: { label: 'Nouveau',     statusIds: [1],    dropStatus: 1 },
+  2: { label: 'In progress', statusIds: [2],    dropStatus: 2 },
+  5: { label: 'Terminé',     statusIds: [5, 6], dropStatus: 5 },
+}
+
+export const KANBAN_STATUS_IDS    = Object.keys(KANBAN_COLUMNS).map(Number)
+export const KANBAN_STATUS_LABELS = Object.fromEntries(
+  Object.entries(KANBAN_COLUMNS).map(([id, col]) => [id, col.label])
+)
+
+// Statut GLPI réel (1-6) → colonne Kanban correspondante (ou null si non affichée)
+export const statusToColumn = (statusId) =>
+  KANBAN_STATUS_IDS.find(cid => KANBAN_COLUMNS[cid].statusIds.includes(statusId)) ?? null
 
 export const PRIORITY_LABELS = {
   1: 'Très basse',
