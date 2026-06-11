@@ -1,7 +1,7 @@
 // Fonctions métier liées aux tickets GLPI.
 // Toutes les fonctions utilisent l'API v2, SAUF getTicketItems qui utilise v1.
 // Voir doc/api-architecture.md pour le schéma complet.
-import { getItems, getItem, getSubItems, createItem, updateItem, deleteItem, getV1SubItems, createV1Item, deleteV1Item } from './glpi'
+import { getAllItems, getItem, getSubItems, createItem, updateItem, deleteItem, getV1SubItems, createV1Item, deleteV1Item } from './glpi'
 
 // ── Labels affichés dans l'UI ───────────────────────────────────────────────
 
@@ -25,7 +25,7 @@ export const STATUS_LABELS = {
 export const KANBAN_COLUMNS = {
   1: { label: 'Nouveau',     statusIds: [1],    dropStatus: 1 },
   2: { label: 'In progress', statusIds: [2],    dropStatus: 2 },
-  5: { label: 'Terminé',     statusIds: [5, 6], dropStatus: 5 },
+  5: { label: 'Terminé',     statusIds: [6], dropStatus: 5 },
 }
 
 export const KANBAN_STATUS_IDS    = Object.keys(KANBAN_COLUMNS).map(Number)
@@ -67,7 +67,7 @@ const ROLE = { REQUESTER: 1, ASSIGNED: 2, OBSERVER: 3 }
 // is_deleted: 0 → exclut les tickets en corbeille côté serveur
 // .filter(!is_deleted) → garde-fou client si le paramètre serveur est ignoré
 export const getTickets = (params = {}) =>
-  getItems('Assistance/Ticket', { sort: 'date_mod', order: 'ASC', is_deleted: 0, ...params })
+  getAllItems('Assistance/Ticket', { sort: 'date_mod', order: 'ASC', is_deleted: 0, ...params })
     .then(items => items.filter(t => !t.is_deleted))
 
 export const getTicket = (id) => getItem('Assistance/Ticket', id)

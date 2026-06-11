@@ -1,7 +1,7 @@
-import { getItems, getItem, getSubItems } from './glpi'
+import { getAllItems, getItem, getSubItems } from './glpi'
 
 export const getComputers = (params = {}) =>
-  getItems('Assets/Computer', { sort: 'name', order: 'ASC', ...params })
+  getAllItems('Assets/Computer', { sort: 'name', order: 'ASC', ...params })
 
 export const getComputerFull = async (id) => {
   const [computer, volumes] = await Promise.all([

@@ -20,7 +20,7 @@
 // "cascade" de modules à calculer — la purge GLPI nettoie elle-même les
 // sous-entités (coûts de tickets, liens Item_Ticket, Document_Item…).
 
-import { getItems, deleteItem, deleteV1Item, getV1Items } from '../glpi'
+import { getAllItems, deleteItem, deleteV1Item, getAllV1Items } from '../glpi'
 import { RESET_MODULES, getResetOrder } from './resetConfig'
 
 // Récupère tous les items "à nous" d'un module (corbeille incluse, items
@@ -37,14 +37,14 @@ const fetchModuleItems = async (cfg) => {
   let items
   if (cfg.isV1 && cfg.trashable) {
     const [active, trashed] = await Promise.all([
-      getV1Items(cfg.glpiPath, { range: '0-999', is_deleted: 0 }),
-      getV1Items(cfg.glpiPath, { range: '0-999', is_deleted: 1 }),
+      getAllV1Items(cfg.glpiPath, { is_deleted: 0 }),
+      getAllV1Items(cfg.glpiPath, { is_deleted: 1 }),
     ])
     items = [...active, ...trashed]
   } else if (cfg.isV1) {
-    items = await getV1Items(cfg.glpiPath, { range: '0-999' })
+    items = await getAllV1Items(cfg.glpiPath, {})
   } else {
-    items = await getItems(cfg.glpiPath, { range: '0-999' })
+    items = await getAllItems(cfg.glpiPath, {})
   }
 
   return cfg.isProtected ? items.filter(it => !cfg.isProtected(it)) : items
@@ -77,8 +77,11 @@ export const getResetStats = async () => {
     const cfg = RESET_MODULES[key]
     try {
       const items = await fetchModuleItems(cfg)
-      const trashed = cfg.trashable ? items.filter(it => it.is_deleted).length : 0
-      const active  = items.length - trashed
+      // `trashed` = ce que l'étape 2 va purger. Pour les types `trashable`,
+      // purgeModule purge désormais TOUS les items (cf. plus bas), donc
+      // `trashed` = items.length pour refléter ce total dès l'étape de revue.
+      const active  = cfg.trashable ? items.filter(it => !it.is_deleted).length : items.length
+      const trashed = cfg.trashable ? items.length : 0
       stats[key] = { label: cfg.label, active, trashed, trashable: cfg.trashable }
     } catch (err) {
       console.warn(`Impossible de récupérer ${cfg.glpiPath}`, err.response?.status || err.message)
@@ -108,16 +111,20 @@ export const trashModule = async (moduleKey) => {
 }
 
 /**
- * Étape 2 — suppression définitive.
- *   - Types avec corbeille : purge les éléments déjà à la corbeille
- *   - Types sans corbeille : suppression directe de tous les éléments restants
+ * Étape 2 — suppression définitive de tous les éléments restants
+ * (corbeille ou non), via force_purge.
  */
 export const purgeModule = async (moduleKey) => {
   const cfg = RESET_MODULES[moduleKey]
   if (!cfg) throw new Error(`Module inconnu : ${moduleKey}`)
 
-  const items = await fetchModuleItems(cfg)
-  const targets = cfg.trashable ? items.filter(it => it.is_deleted) : items
+  // On purge TOUS les items trouvés, sans filtrer sur is_deleted : certains
+  // types (ex: tickets Clôturés) ne passent jamais par la corbeille car
+  // GLPI ignore silencieusement le DELETE sans force_purge pour eux. Sans ce
+  // filtre, ces éléments restent invisibles à l'étape 2 et survivent à la
+  // réinitialisation. force_purge supprime correctement quel que soit
+  // l'état is_deleted actuel.
+  const targets = await fetchModuleItems(cfg)
 
   let done = 0
   for (const item of targets) {

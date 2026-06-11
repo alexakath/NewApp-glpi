@@ -3,8 +3,6 @@ import { getAssets, ASSET_TYPES, ASSET_TYPE_KEYS } from '../api/assets'
 import { getTickets } from '../api/tickets'
 import './DashboardPage.css'
 
-const ALL = { range: '0-9999' }
-
 function StatCard({ title, total, label, rows }) {
   return (
     <div className="stat-card">
@@ -49,8 +47,8 @@ function DashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      Promise.all(ASSET_TYPE_KEYS.map(t => getAssets(t, ALL).catch(() => []))),
-      getTickets(ALL).catch(() => []),
+      Promise.all(ASSET_TYPE_KEYS.map(t => getAssets(t).catch(() => []))),
+      getTickets().catch(() => []),
     ]).then(([lists, tix]) => {
       const counts = {}
       ASSET_TYPE_KEYS.forEach((t, i) => {

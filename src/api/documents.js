@@ -51,6 +51,25 @@ export const getItemImageUrl = (itemtype, itemId) =>
     return _downloadImageBlob(headers, docId)
   }).catch(() => null)
 
+// Récupère TOUTE une liste v1 en paginant dans une session déjà ouverte —
+// même plafond de 100 résultats par page que l'API v2 (voir glpi.js).
+const PAGE_SIZE = 100
+const _fetchAllV1 = async (headers, path) => {
+  let start = 0
+  let all = []
+  while (true) {
+    const res = await axios.get(`${V1_BASE}/${path}`, {
+      headers,
+      params: { range: `${start}-${start + PAGE_SIZE - 1}` },
+    }).catch(() => ({ data: [] }))
+    const page = Array.isArray(res.data) ? res.data : []
+    all = all.concat(page)
+    if (page.length < PAGE_SIZE) break
+    start += PAGE_SIZE
+  }
+  return all
+}
+
 // Construit une Map { `${itemtype}-${id}` → blobUrl } pour une liste d'actifs,
 // le tout en une seule session v1 (un seul initSession / killSession).
 // assets : [{ id, itemtype: 'Computer'|'Monitor' }]
@@ -59,24 +78,17 @@ export const buildAssetImageMap = (assets) =>
     const map = new Map()
 
     // 1. Récupère les métadonnées de tous les documents pour ne retenir que les images
-    const docsRes = await axios.get(`${V1_BASE}/Document`, {
-      headers,
-      params: { range: '0-999' },
-    }).catch(() => ({ data: [] }))
+    const allDocs = await _fetchAllV1(headers, 'Document')
     const imageDocs = new Set(
-      (Array.isArray(docsRes.data) ? docsRes.data : [])
+      allDocs
         .filter(d => (d.mime || '').startsWith('image/'))
         .map(d => Number(d.id))
     )
 
     if (imageDocs.size === 0) return map
 
-    // 2. Tous les Document_Item en un seul appel
-    const res = await axios.get(`${V1_BASE}/Document_Item`, {
-      headers,
-      params: { range: '0-999' },
-    }).catch(() => ({ data: [] }))
-    const allDocItems = Array.isArray(res.data) ? res.data : []
+    // 2. Tous les Document_Item
+    const allDocItems = await _fetchAllV1(headers, 'Document_Item')
 
     // 3. Première association par actif — uniquement si le document est une image connue
     const assetDocMap = new Map()

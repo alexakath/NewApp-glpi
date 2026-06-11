@@ -99,7 +99,7 @@ export const PRIORITY_SYNONYMS = {
   3: ['medium', 'moyenne'],
   4: ['high', 'haute'],
   5: ['very high', 'très haute'],
-  6: ['critical', 'majeure', 'urgent'],
+  6: ['critical', 'majeure', 'urgent', 'major'],
 }
 export const TICKET_PRIORITY_MAP = Object.fromEntries(
   Object.entries(PRIORITY_SYNONYMS).flatMap(([id, words]) => words.map(w => [w, Number(id)]))

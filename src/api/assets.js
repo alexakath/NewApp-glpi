@@ -1,4 +1,4 @@
-import { getItems, getItem } from './glpi'
+import { getAllItems, getItem } from './glpi'
 import { ASSET_TYPE_META, buildItemTypeConfig } from './import/modulesConfig'
 
 // ─── ASSET_TYPES — dérivé de ASSET_TYPE_META (source de vérité unique) ────────
@@ -23,7 +23,7 @@ export const ASSET_TYPE_KEYS = Object.keys(ASSET_TYPES)
 export const getAssets = (itemtype, params = {}) => {
   const cfg = ASSET_TYPES[itemtype]
   if (!cfg) throw new Error(`Type d'actif inconnu : ${itemtype}`)
-  return getItems(cfg.glpiPath, { sort: 'name', order: 'ASC', ...params })
+  return getAllItems(cfg.glpiPath, { sort: 'name', order: 'ASC', ...params })
 }
 
 // Récupère le détail complet d'un actif par son type + son ID

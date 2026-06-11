@@ -1,6 +1,6 @@
 import Papa from 'papaparse'
 import JSZip from 'jszip'
-import { getItems, createItem, updateItem, postSubItem, createV1Item, withV1Session, uploadAndLinkDocumentV1 } from '../glpi'
+import { getAllItems, createItem, updateItem, postSubItem, createV1Item, withV1Session, uploadAndLinkDocumentV1 } from '../glpi'
 import { ImportRegistry } from './detectModules'
 import { KNOWN_ITEM_TYPES, TICKET_STATUS_MAP, TICKET_PRIORITY_MAP, TICKET_TYPE_MAP, SUB_MODULE_ORDER, expandModule, buildItemTypeConfig, normalizeItemType } from './modulesConfig'
 import { MODULES_CONFIG } from './modulesConfig'
@@ -96,7 +96,7 @@ const upsertDropdown = async (glpiPath, name, registryKey, registry, extra = {})
   if (registry.has(registryKey, trimmed)) return registry.get(registryKey, trimmed).id
 
   // Récupérer tous les items et chercher par nom (filtre client-side — fiable)
-  const all = await getItems(glpiPath, { range: '0-999' }).catch(() => [])
+  const all = await getAllItems(glpiPath, {}).catch(() => [])
   const existing = all.find(item => {
     if (item.is_deleted) return false
     const n = typeof item.name === 'object' ? (item.name?.name ?? '') : String(item.name ?? '')
@@ -216,7 +216,7 @@ const importUsers = async (rows, registry, onProgress) => {
       const { name: login, realname, firstname } = parseUserName(fullName)
 
       // Chercher si un utilisateur avec ce login existe déjà dans GLPI
-      const all = await getItems('Administration/User', { range: '0-999' }).catch(() => [])
+      const all = await getAllItems('Administration/User', {}).catch(() => [])
       // v2 : le champ login s'appelle "username" (pas "name"), ignorer la corbeille
       const existing = all.find(u => !u.is_deleted && String(u.username ?? u.name ?? '').toLowerCase() === login.toLowerCase())
 
@@ -255,7 +255,7 @@ const importAssetType = async (itemTypeCfg, itemType, rows, registry, onProgress
 
   const results = { success: 0, errors: [], warnings }
 
-  const allExisting = await getItems(itemTypeCfg.glpiPath, { range: '0-999' }).catch(() => [])
+  const allExisting = await getAllItems(itemTypeCfg.glpiPath, {}).catch(() => [])
 
   for (let i = 0; i < filteredRows.length; i++) {
     const row = filteredRows[i]
@@ -359,21 +359,37 @@ const importTickets = async (rows, registry, onProgress) => {
 
       if (refTicket) registry.set('tickets', refTicket, { id: ticketId })
 
-      // Items associés au ticket via v1 (Item_Ticket)
+      // Items associés au ticket via v1 (Item_Ticket) — AVANT le changement
+      // de statut : GLPI refuse d'ajouter des éléments liés à un ticket
+      // Résolu/Clôturé ("Vous n'avez pas les droits requis"), le ticket doit
+      // donc encore être au statut par défaut (Nouveau) à ce stade.
       const itemsRaw = getCi(row, 'Items')
       if (itemsRaw) {
         let assetNames = []
         try { assetNames = JSON.parse(itemsRaw) } catch { /* items malformé — ignoré */ }
 
+        // Dédoublonne : un même actif référencé plusieurs fois dans le CSV
+        // ne doit être lié qu'une fois (GLPI rejette le second lien identique
+        // avec une 400 "relation déjà existante")
+        assetNames = [...new Set(assetNames.map(a => a.trim()))]
+
         for (const assetName of assetNames) {
-          const asset = registry.get('assets', assetName.trim())
+          const asset = registry.get('assets', assetName)
           if (!asset?.id) continue
-          createV1Item('Item_Ticket', {
+          await createV1Item('Item_Ticket', {
             tickets_id: ticketId,
             itemtype: asset.itemtype,
             items_id: Number(asset.id),
           }).catch(() => {}) // non-bloquant : le ticket est déjà créé
         }
+      }
+
+      // GLPI peut ignorer le statut envoyé à la création (constaté pour status=5) —
+      // on le réapplique explicitement via PATCH pour garantir le résultat.
+      // Fait en dernier : une fois Résolu/Clôturé, le ticket est verrouillé
+      // pour les ajouts d'éléments liés ci-dessus.
+      if (body.status && body.status !== 1) {
+        await updateItem('Assistance/Ticket', ticketId, { status: body.status }).catch(() => {})
       }
 
       results.success++
@@ -480,7 +496,7 @@ export const importImages = async (zipFile, onProgress) => {
   // 2. Récupérer tous les actifs GLPI depuis KNOWN_ITEM_TYPES
   const allAssets = await Promise.all(
     Object.entries(KNOWN_ITEM_TYPES).map(([itemType, t]) =>
-      getItems(t.glpiPath, { range: '0-999' }).catch(() => [])
+      getAllItems(t.glpiPath, {}).catch(() => [])
         .then(items => ({ itemType, items }))
     )
   )
