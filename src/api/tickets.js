@@ -18,14 +18,12 @@ export const STATUS_LABELS = {
 // statusIds  : statuts GLPI regroupés/affichés dans la colonne
 // dropStatus : statut posé sur le ticket quand il est déposé dans la colonne
 //
-// "Terminé" regroupe Résolu (5, posé via le Kanban) et Clôturé (6, valeur
-// "Closed" des fichiers d'import) — les deux représentent un ticket terminé,
-// peu importe comment il y est arrivé. Pour changer ce comportement
-// (ex: Terminé = Clôturé uniquement), il suffit de modifier statusIds ci-dessous.
+// "Terminé" regroupe les tickets Clôturés (6) — le drop dans cette colonne
+// applique également le statut Clôturé (6), pas Résolu (5).
 export const KANBAN_COLUMNS = {
   1: { label: 'Nouveau',     statusIds: [1],    dropStatus: 1 },
   2: { label: 'In progress', statusIds: [2],    dropStatus: 2 },
-  5: { label: 'Terminé',     statusIds: [6], dropStatus: 5 },
+  5: { label: 'Terminé',     statusIds: [6], dropStatus: 6 },
 }
 
 export const KANBAN_STATUS_IDS    = Object.keys(KANBAN_COLUMNS).map(Number)

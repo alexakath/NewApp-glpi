@@ -340,10 +340,12 @@ const importTickets = async (rows, registry, onProgress) => {
       const typeId = TICKET_TYPE_MAP[typeStr.toLowerCase()]
       if (typeId) body.type = typeId
 
+      // Le statut n'est PAS mis dans le body de création : un ticket créé
+      // directement Résolu/Clôturé est verrouillé par GLPI pour les liaisons
+      // Item_Ticket (v1) qui suivent. On le gardera de côté pour l'appliquer
+      // via PATCH une fois les éléments liés (voir plus bas).
       const statusId = TICKET_STATUS_MAP[statusStr.toLowerCase()]
-      if (statusId) {
-        body.status = statusId
-      } else if (statusStr) {
+      if (!statusId && statusStr) {
         results.warnings.push({ message: `Statut "${statusStr}" non reconnu (ticket "${titre}") — statut par défaut GLPI appliqué`, row })
       }
 
@@ -361,8 +363,8 @@ const importTickets = async (rows, registry, onProgress) => {
 
       // Items associés au ticket via v1 (Item_Ticket) — AVANT le changement
       // de statut : GLPI refuse d'ajouter des éléments liés à un ticket
-      // Résolu/Clôturé ("Vous n'avez pas les droits requis"), le ticket doit
-      // donc encore être au statut par défaut (Nouveau) à ce stade.
+      // Résolu/Clôturé ("Vous n'avez pas les droits requis"). Le ticket
+      // vient d'être créé sans statut explicite, donc encore Nouveau ici.
       const itemsRaw = getCi(row, 'Items')
       if (itemsRaw) {
         let assetNames = []
@@ -384,12 +386,10 @@ const importTickets = async (rows, registry, onProgress) => {
         }
       }
 
-      // GLPI peut ignorer le statut envoyé à la création (constaté pour status=5) —
-      // on le réapplique explicitement via PATCH pour garantir le résultat.
-      // Fait en dernier : une fois Résolu/Clôturé, le ticket est verrouillé
-      // pour les ajouts d'éléments liés ci-dessus.
-      if (body.status && body.status !== 1) {
-        await updateItem('Assistance/Ticket', ticketId, { status: body.status }).catch(() => {})
+      // Statut final appliqué en dernier, une fois les éléments liés —
+      // un ticket Résolu/Clôturé est verrouillé pour les ajouts ci-dessus.
+      if (statusId && statusId !== 1) {
+        await updateItem('Assistance/Ticket', ticketId, { status: statusId }).catch(() => {})
       }
 
       results.success++
