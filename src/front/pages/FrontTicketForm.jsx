@@ -5,6 +5,7 @@ import {
   getTicketItems, addItemToTicket, removeItemFromTicket,
   TYPE_LABELS, KANBAN_STATUS_LABELS, URGENCY_LABELS,
 } from '../../api/tickets'
+import { ASSET_TYPES, ASSET_TYPE_KEYS } from '../../api/assets'
 import useAssets from '../hooks/useAssets'
 import { IcoBack } from '../icons'
 import './FrontTicketForm.css'
@@ -92,7 +93,7 @@ function FrontTicketForm() {
         setOriginalItemIds(rows.map(i => i.id))
         setItems(rows.length
           ? rows.map(i => ({
-              assetType: i.itemtype === 'Computer' ? 'computer' : 'monitor',
+              assetType: i.itemtype,
               assetId:   String(i.items_id),
             }))
           : [{ assetType: '', assetId: '' }]
@@ -118,12 +119,12 @@ function FrontTicketForm() {
         : { ...row, [field]: value, ...(field === 'assetType' ? { assetId: '' } : {}) }
     ))
 
+  // ── Types d'équipements ayant au moins un actif disponible ─────────────
+  const presentAssetTypes = ASSET_TYPE_KEYS.filter(t => (assetsByType[t]?.length ?? 0) > 0)
+
   // ── Options d'équipements selon le type sélectionné ────────────────────
-  const assetOptions = (assetType) => {
-    if (assetType === 'computer') return (assetsByType.Computer ?? []).map(c => ({ value: String(c.id), label: c.name }))
-    if (assetType === 'monitor')  return (assetsByType.Monitor  ?? []).map(m => ({ value: String(m.id), label: m.name }))
-    return []
-  }
+  const assetOptions = (assetType) =>
+    (assetsByType[assetType] ?? []).map(a => ({ value: String(a.id), label: a.name }))
 
   // ── Validation ──────────────────────────────────────────────────────────
   const validate = () => {
@@ -174,7 +175,7 @@ function FrontTicketForm() {
       if (validItems.length > 0) {
         await Promise.allSettled(
           validItems.map(i =>
-            addItemToTicket(ticketId, i.assetType === 'computer' ? 'Computer' : 'Monitor', Number(i.assetId))
+            addItemToTicket(ticketId, i.assetType, Number(i.assetId))
           )
         )
       }
@@ -321,8 +322,9 @@ function FrontTicketForm() {
                   onChange={e => updateItemRow(idx, 'assetType', e.target.value)}
                 >
                   <option value="">— Type d'équipement —</option>
-                  <option value="computer">Ordinateur</option>
-                  <option value="monitor">Moniteur</option>
+                  {presentAssetTypes.map(t => (
+                    <option key={t} value={t}>{ASSET_TYPES[t].label}</option>
+                  ))}
                 </select>
 
                 {/* Choix de l'équipement (activé seulement si un type est choisi) */}
