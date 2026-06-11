@@ -56,7 +56,7 @@ function TicketsPage() {
 
   const filteredTickets = useMemo(() => {
     return tickets.filter((ticket) => {
-      const matchesSearch = ticket.name?.toLowerCase?().includes(search.toLowerCase())
+      const matchesSearch = ticket.name?.toLowerCase().includes(search.toLowerCase())
       const matchesStatus = !statusFilter || String(getId(ticket.status)) === statusFilter
       const matchesType = !typeFilter || String(getId(ticket.type)) === typeFilter
       const matchesPriority = !priorityFilter || String(getId(ticket.priority)) === priorityFilter
@@ -80,24 +80,33 @@ function TicketsPage() {
       <div className="filters-bar">
         <input type="text" className="filter-input" placeholder="Rechercher un ticket..." value={search} onChange={(e) => setSearch(e.target.value)}
         />
-        <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+        <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="">Tous les status</option>
           {Object.entries(STATUS_LABELS).map(([id, label]) => (
             <option key={id} value={id}>{label}</option>
           ))}
         </select>
-        <select className="filter-select" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}
+        <select className="filter-select" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
           <option value="">Tous les types</option>
           {Object.entries(TYPE_LABELS).map(([id, label]) => (
             <option key={id} value={id}>{label}</option>
           ))}
         </select>
-        <select className="filter-select" value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}
+        <select className="filter-select" value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
           <option value="">Tous les priorites</option>
           {Object.entries(PRIORITY_LABELS).map(([id, label]) => (
             <option key={id} value={id}>{label}</option>
           ))}
         </select>
+        <button type="button" className="filter-reset" onClick={() => {
+          setSearch('')
+          setStatusFilter('')
+          setTypeFilter('')
+          setPriorityFilter('')
+        }}
+        >
+          Reinitialiser
+        </button>
       </div>
 
       <div className="table-card">
