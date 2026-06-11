@@ -44,9 +44,13 @@ axios.interceptors.response.use(
 const BASE_URL = import.meta.env.VITE_GLPI_URL   // /api.php/v2.3
 
 // Paramètres envoyés par défaut sur chaque requête GET de liste
+// L'API HL v2 pagine via les paramètres `start`/`limit` (PAS `range`, qui est
+// ignoré silencieusement et fait retomber sur ces valeurs par défaut : la
+// même première page de 100 résultats est alors renvoyée à chaque requête).
 const DEFAULT_PARAMS = {
   expand_dropdowns: true,   // retourne les dropdowns sous forme d'objets {id, name}
-  range: '0-99',            // limite à 100 résultats (suffisant pour nos listes)
+  start: 0,
+  limit: 100,
 }
 
 // Construit le header Authorization à partir du token OAuth2 stocké.
@@ -69,6 +73,30 @@ export const getItems = async (path, params = {}) => {
   })
   // v2 peut retourner un tableau direct OU { data: [...], totalcount: N }
   return Array.isArray(res.data) ? res.data : (res.data?.data ?? [])
+}
+
+// Récupère TOUTE une liste en paginant avec `start`/`limit` par page de 100,
+// jusqu'à en recevoir une incomplète (= dernière page).
+const PAGE_SIZE = 100
+// Garde-fou absolu : si l'API ignore l'offset `start` et renvoie toujours la
+// même page, on ne boucle jamais indéfiniment (max 20 000 éléments).
+const MAX_PAGES = 200
+
+export const getAllItems = async (path, params = {}) => {
+  let start = 0
+  let all = []
+  let prevFirstId
+  for (let i = 0; i < MAX_PAGES; i++) {
+    const page = await getItems(path, { ...params, start, limit: PAGE_SIZE })
+    if (page.length === 0) break
+    // L'API a renvoyé la même page que la précédente (offset ignoré) → on arrête
+    if (page[0]?.id !== undefined && page[0].id === prevFirstId) break
+    all = all.concat(page)
+    if (page.length < PAGE_SIZE) break
+    prevFirstId = page[0]?.id
+    start += PAGE_SIZE
+  }
+  return all
 }
 
 // Récupère un seul item par son ID  ex: getItem('Assets/Computer', 3)
@@ -213,6 +241,25 @@ export const getV1Items = (path, params = {}) =>
     axios.get(`${V1_BASE}/${path}`, { headers, params })
       .then(res => Array.isArray(res.data) ? res.data : [])
   )
+
+// Variante paginée de getV1Items — même plafond par page que la v2 (voir
+// getAllItems ci-dessus). Boucle par page de 100 jusqu'à en recevoir une
+// incomplète.
+export const getAllV1Items = async (path, params = {}) => {
+  let start = 0
+  let all = []
+  let prevFirstId
+  for (let i = 0; i < MAX_PAGES; i++) {
+    const page = await getV1Items(path, { ...params, range: `${start}-${start + PAGE_SIZE - 1}` })
+    if (page.length === 0) break
+    if (page[0]?.id !== undefined && page[0].id === prevFirstId) break
+    all = all.concat(page)
+    if (page.length < PAGE_SIZE) break
+    prevFirstId = page[0]?.id
+    start += PAGE_SIZE
+  }
+  return all
+}
 
 // Crée un item via l'API v1.
 // IMPORTANT : la v1 exige un wrapper { input: {...} } autour du body,

@@ -1,8 +1,8 @@
 import Papa from 'papaparse'
 import JSZip from 'jszip'
-import { getItems, createItem, updateItem, postSubItem, createV1Item, withV1Session, uploadAndLinkDocumentV1 } from '../glpi'
+import { getAllItems, createItem, updateItem, postSubItem, createV1Item, withV1Session, uploadAndLinkDocumentV1 } from '../glpi'
 import { ImportRegistry } from './detectModules'
-import { KNOWN_ITEM_TYPES, TICKET_STATUS_MAP, TICKET_PRIORITY_MAP, TICKET_TYPE_MAP, SUB_MODULE_ORDER, expandModule } from './modulesConfig'
+import { KNOWN_ITEM_TYPES, TICKET_STATUS_MAP, TICKET_PRIORITY_MAP, TICKET_TYPE_MAP, SUB_MODULE_ORDER, expandModule, buildItemTypeConfig, normalizeItemType } from './modulesConfig'
 import { MODULES_CONFIG } from './modulesConfig'
 
 // ─── CSV ──────────────────────────────────────────────────────────────────────
@@ -58,13 +58,47 @@ const getCi = (row, ...keys) => {
 const parseCsvFloat = (str) =>
   parseFloat(String(str || '0').replace(',', '.').trim()) || 0
 
-// "03/06/2026" + "13:45" → "2026-06-03 13:45:00"
+// Normalise une heure "HH:MM" ou "HH:MM:SS" → "HH:MM:SS"
+const normalizeTime = (timeStr) => {
+  const m = String(timeStr).trim().match(/^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/)
+  if (!m) return null
+  const [, h, mn, s = '0'] = m
+  return `${h.padStart(2, '0')}:${mn.padStart(2, '0')}:${s.padStart(2, '0')}`
+}
+
+// Convertit une date CSV vers le format attendu par GLPI ("YYYY-MM-DD HH:MM:SS").
+// Formats de date acceptés (heure optionnelle déjà incluse, séparée par un
+// espace ou un "T") :
+//   - "DD/MM/YYYY" ou "DD-MM-YYYY"  (jour/mois/année, format européen)
+//   - "YYYY-MM-DD" ou "YYYY/MM/DD"  (ISO)
+// `heureStr` (colonne "Heure" séparée) est prioritaire si fournie ; sinon
+// l'heure éventuellement incluse dans `dateStr` est utilisée, sinon 00:00:00.
+// Retourne null si aucun format reconnu (le statut "date par défaut système"
+// est alors signalé à l'utilisateur via un warning).
 const parseGlpiDate = (dateStr, heureStr = '') => {
   if (!dateStr) return null
-  const parts = String(dateStr).split('/')
-  if (parts.length !== 3) return null
-  const time = heureStr ? `${heureStr}:00` : '00:00:00'
-  return `${parts[2]}-${parts[1]}-${parts[0]} ${time}`
+  const [datePart, timePart] = String(dateStr).trim().split(/[ T]/)
+
+  let year, month, day
+  let m
+  if ((m = datePart.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/))) {
+    // DD/MM/YYYY ou DD-MM-YYYY
+    ;[, day, month, year] = m
+  } else if ((m = datePart.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/))) {
+    // YYYY-MM-DD ou YYYY/MM/DD
+    ;[, year, month, day] = m
+  } else {
+    return null
+  }
+
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null
+
+  const time = (heureStr && normalizeTime(heureStr))
+    || (timePart && normalizeTime(timePart))
+    || '00:00:00'
+
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${year}-${pad(month)}-${pad(day)} ${time}`
 }
 
 // Supprime les accents et caractères spéciaux pour produire un login valide GLPI
@@ -96,7 +130,7 @@ const upsertDropdown = async (glpiPath, name, registryKey, registry, extra = {})
   if (registry.has(registryKey, trimmed)) return registry.get(registryKey, trimmed).id
 
   // Récupérer tous les items et chercher par nom (filtre client-side — fiable)
-  const all = await getItems(glpiPath, { range: '0-999' }).catch(() => [])
+  const all = await getAllItems(glpiPath, {}).catch(() => [])
   const existing = all.find(item => {
     if (item.is_deleted) return false
     const n = typeof item.name === 'object' ? (item.name?.name ?? '') : String(item.name ?? '')
@@ -184,6 +218,7 @@ const importManufacturers = async (rows, registry, onProgress) => {
 const _knownCsvTypes = new Set(Object.values(KNOWN_ITEM_TYPES).map(t => t.csvType))
 
 const importAssetModels = async (itemTypeCfg, rows, registry, onProgress) => {
+  if (!itemTypeCfg.modelGlpiPath) return { success: 0, errors: [] }
   const filteredRows = rows.filter(r => getCi(r, 'Item_Type').toLowerCase() === itemTypeCfg.csvType)
   const unique = [...new Set(filteredRows.map(r => getCi(r, 'Model')).filter(Boolean))]
   const results = { success: 0, errors: [] }
@@ -215,7 +250,7 @@ const importUsers = async (rows, registry, onProgress) => {
       const { name: login, realname, firstname } = parseUserName(fullName)
 
       // Chercher si un utilisateur avec ce login existe déjà dans GLPI
-      const all = await getItems('Administration/User', { range: '0-999' }).catch(() => [])
+      const all = await getAllItems('Administration/User', {}).catch(() => [])
       // v2 : le champ login s'appelle "username" (pas "name"), ignorer la corbeille
       const existing = all.find(u => !u.is_deleted && String(u.username ?? u.name ?? '').toLowerCase() === login.toLowerCase())
 
@@ -254,7 +289,7 @@ const importAssetType = async (itemTypeCfg, itemType, rows, registry, onProgress
 
   const results = { success: 0, errors: [], warnings }
 
-  const allExisting = await getItems(itemTypeCfg.glpiPath, { range: '0-999' }).catch(() => [])
+  const allExisting = await getAllItems(itemTypeCfg.glpiPath, {}).catch(() => [])
 
   for (let i = 0; i < filteredRows.length; i++) {
     const row = filteredRows[i]
@@ -314,7 +349,7 @@ const importAssetType = async (itemTypeCfg, itemType, rows, registry, onProgress
 // ─── Import TICKETS ───────────────────────────────────────────────────────────
 
 const importTickets = async (rows, registry, onProgress) => {
-  const results = { success: 0, errors: [] }
+  const results = { success: 0, errors: [], warnings: [] }
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
@@ -334,37 +369,65 @@ const importTickets = async (rows, registry, onProgress) => {
 
       if (desc)     body.content  = desc
       const glpiDate = parseGlpiDate(dateStr, heureStr)
-      if (glpiDate) body.date = glpiDate
+      if (glpiDate) {
+        body.date = glpiDate
+      } else if (dateStr) {
+        results.warnings.push({ message: `Date "${dateStr}" non reconnue (ticket "${titre}") — date du jour appliquée par GLPI`, row })
+      }
 
       const typeId = TICKET_TYPE_MAP[typeStr.toLowerCase()]
       if (typeId) body.type = typeId
 
+      // Le statut n'est PAS mis dans le body de création : un ticket créé
+      // directement Résolu/Clôturé est verrouillé par GLPI pour les liaisons
+      // Item_Ticket (v1) qui suivent. On le gardera de côté pour l'appliquer
+      // via PATCH une fois les éléments liés (voir plus bas).
       const statusId = TICKET_STATUS_MAP[statusStr.toLowerCase()]
-      if (statusId) body.status = statusId
+      if (!statusId && statusStr) {
+        results.warnings.push({ message: `Statut "${statusStr}" non reconnu (ticket "${titre}") — statut par défaut GLPI appliqué`, row })
+      }
 
       const priorityId = TICKET_PRIORITY_MAP[priorityStr.toLowerCase()]
-      if (priorityId) body.priority = priorityId
+      if (priorityId) {
+        body.priority = priorityId
+      } else if (priorityStr) {
+        results.warnings.push({ message: `Priorité "${priorityStr}" non reconnue (ticket "${titre}") — priorité par défaut GLPI appliquée`, row })
+      }
 
       const created = await createItem('Assistance/Ticket', body)
       const ticketId = String(created?.id ?? created)
 
       if (refTicket) registry.set('tickets', refTicket, { id: ticketId })
 
-      // Items associés au ticket via v1 (Item_Ticket)
+      // Items associés au ticket via v1 (Item_Ticket) — AVANT le changement
+      // de statut : GLPI refuse d'ajouter des éléments liés à un ticket
+      // Résolu/Clôturé ("Vous n'avez pas les droits requis"). Le ticket
+      // vient d'être créé sans statut explicite, donc encore Nouveau ici.
       const itemsRaw = getCi(row, 'Items')
       if (itemsRaw) {
         let assetNames = []
         try { assetNames = JSON.parse(itemsRaw) } catch { /* items malformé — ignoré */ }
 
+        // Dédoublonne : un même actif référencé plusieurs fois dans le CSV
+        // ne doit être lié qu'une fois (GLPI rejette le second lien identique
+        // avec une 400 "relation déjà existante")
+        assetNames = [...new Set(assetNames.map(a => a.trim()))]
+
         for (const assetName of assetNames) {
-          const asset = registry.get('assets', assetName.trim())
+          const asset = registry.get('assets', assetName)
           if (!asset?.id) continue
-          createV1Item('Item_Ticket', {
+          await createV1Item('Item_Ticket', {
             tickets_id: ticketId,
             itemtype: asset.itemtype,
             items_id: Number(asset.id),
           }).catch(() => {}) // non-bloquant : le ticket est déjà créé
         }
+      }
+
+      // Statut final appliqué en dernier, une fois les éléments liés —
+      // un ticket Résolu/Clôturé est verrouillé pour les ajouts ci-dessus.
+      if (statusId && statusId !== 1) {
+        await updateItem('Assistance/Ticket', ticketId, { status: statusId }).catch(() => {})
       }
 
       results.success++
@@ -471,7 +534,7 @@ export const importImages = async (zipFile, onProgress) => {
   // 2. Récupérer tous les actifs GLPI depuis KNOWN_ITEM_TYPES
   const allAssets = await Promise.all(
     Object.entries(KNOWN_ITEM_TYPES).map(([itemType, t]) =>
-      getItems(t.glpiPath, { range: '0-999' }).catch(() => [])
+      getAllItems(t.glpiPath, {}).catch(() => [])
         .then(items => ({ itemType, items }))
     )
   )
@@ -568,8 +631,21 @@ export const importMultiModule = async (csvPlan, onSubModuleProgress, onSubModul
   const globalReport = {}
 
   for (const { subModuleKey, rows } of csvPlan) {
-    const importer = SUB_MODULE_IMPORTERS[subModuleKey]
-    if (!importer) continue
+    let importer = SUB_MODULE_IMPORTERS[subModuleKey]
+
+    // Fallback pour les types non déclarés dans ASSET_TYPE_META (convention automatique)
+    if (!importer) {
+      if (subModuleKey.endsWith('_models')) {
+        const slug     = subModuleKey.slice(0, -7)          // 'printer_models' → 'printer'
+        const itemType = normalizeItemType(slug)
+        const config   = buildItemTypeConfig(itemType)
+        importer = (r, reg, cb) => importAssetModels(config, r, reg, cb)
+      } else {
+        const itemType = normalizeItemType(subModuleKey)
+        const config   = buildItemTypeConfig(itemType)
+        importer = (r, reg, cb) => importAssetType(config, itemType, r, reg, cb)
+      }
+    }
 
     const results = await importer(
       rows,
@@ -586,13 +662,33 @@ export const importMultiModule = async (csvPlan, onSubModuleProgress, onSubModul
 
 // ─── Construction du plan (appelé depuis ImportPage) ─────────────────────────
 // detectedEntries : [{ moduleKey, rows, fileName, fileId }]
-// Retourne les sous-modules triés, prêts à passer à importMultiModule.
+// Pour le module 'assets' : découvre les types depuis la colonne Item_Type du CSV
+// (uniquement les types présents → pas d'étapes vides dans le plan).
 
 export const buildImportPlan = (detectedEntries) => {
   const subModuleMap = {}
 
   for (const { moduleKey, rows, fileName, fileId } of detectedEntries) {
-    const subKeys = expandModule(moduleKey)
+    let subKeys
+
+    if (moduleKey === 'assets') {
+      // Types réellement présents dans ce CSV
+      const presentTypes = [...new Set(
+        rows.map(r => getCi(r, 'Item_Type')).filter(Boolean)
+      )].map(raw => normalizeItemType(raw))
+
+      const typeConfigs = presentTypes.map(t => KNOWN_ITEM_TYPES[t] ?? buildItemTypeConfig(t))
+
+      subKeys = [
+        'states', 'locations', 'manufacturers',
+        ...typeConfigs.filter(t => t.modelModule).map(t => t.modelModule),
+        'users',
+        ...typeConfigs.map(t => t.registryModule),
+      ]
+    } else {
+      subKeys = expandModule(moduleKey)
+    }
+
     for (const subKey of subKeys) {
       if (!subModuleMap[subKey]) {
         subModuleMap[subKey] = { subModuleKey: subKey, rows, sourceModuleKey: moduleKey, fileName, fileId }
@@ -600,5 +696,10 @@ export const buildImportPlan = (detectedEntries) => {
     }
   }
 
-  return SUB_MODULE_ORDER.filter(k => subModuleMap[k]).map(k => subModuleMap[k])
+  // Ordre canonique en premier, puis les types dynamiques non encore connus
+  const canonicalSet = new Set(SUB_MODULE_ORDER)
+  return [
+    ...SUB_MODULE_ORDER.filter(k => subModuleMap[k]),
+    ...Object.keys(subModuleMap).filter(k => !canonicalSet.has(k)),
+  ].map(k => subModuleMap[k])
 }

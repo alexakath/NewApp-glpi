@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   getTickets, updateTicket,
-  KANBAN_STATUS_IDS, KANBAN_STATUS_LABELS,
+  KANBAN_STATUS_IDS, KANBAN_STATUS_LABELS, KANBAN_COLUMNS, statusToColumn,
 } from '../../api/tickets'
 import { getKanbanColumns, getKanbanLang } from '../../api/backend'
 import KanbanTicketModal from '../components/KanbanTicketModal'
@@ -13,9 +13,12 @@ const FALLBACK_COLORS  = { 1: '#dbeafe', 2: '#fef9c3', 5: '#dcfce7' }
 // Extrait l'ID numérique d'un champ GLPI (int, string, ou {id, name})
 const toId = (val) => Number(typeof val === 'object' ? val?.id : val)
 
+// Une entrée vide par colonne Kanban (ex: { 1: [], 2: [], 5: [] })
+const emptyGroups = () => Object.fromEntries(KANBAN_STATUS_IDS.map(cid => [cid, []]))
+
 export default function FrontKanbanPage() {
   const navigate = useNavigate()
-  const [grouped,    setGrouped]    = useState({ 1: [], 2: [], 5: [] })
+  const [grouped,    setGrouped]    = useState(emptyGroups)
   const [kanbanCols, setKanbanCols] = useState({})  // { [sid]: { color, label_mg } }
   const [lang,       setLang]       = useState('fr')
   const [loading,    setLoading]    = useState(true)
@@ -39,10 +42,11 @@ export default function FrontKanbanPage() {
       getKanbanColumns().catch(() => null),
       getKanbanLang().catch(() => 'fr'),
     ]).then(([tickets, cols, fetchedLang]) => {
-      const groups = { 1: [], 2: [], 5: [] }
+      const groups = emptyGroups()
       tickets.forEach(t => {
         const sid = toId(t.status)
-        if (sid in groups) groups[sid].push(t)
+        const col = statusToColumn(sid)
+        if (col != null) groups[col].push(t)
       })
       setGrouped(groups)
       setLang(fetchedLang)
@@ -96,12 +100,13 @@ export default function FrontKanbanPage() {
 
   const doMove = async (ticket, fromSid, toSid) => {
     setMoving(true)
+    const newStatus = KANBAN_COLUMNS[toSid].dropStatus
     try {
-      await updateTicket(ticket.id, { status: toSid })
+      await updateTicket(ticket.id, { status: newStatus })
       setGrouped(prev => {
-        const next = { 1: [...prev[1]], 2: [...prev[2]], 5: [...prev[5]] }
+        const next = Object.fromEntries(KANBAN_STATUS_IDS.map(cid => [cid, [...prev[cid]]]))
         KANBAN_STATUS_IDS.forEach(s => { next[s] = next[s].filter(t => t.id !== ticket.id) })
-        next[toSid] = [...next[toSid], { ...ticket, status: toSid }]
+        next[toSid] = [...next[toSid], { ...ticket, status: newStatus }]
         return next
       })
     } catch (err) {

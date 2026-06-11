@@ -1,7 +1,7 @@
 // Fonctions métier liées aux tickets GLPI.
 // Toutes les fonctions utilisent l'API v2, SAUF getTicketItems qui utilise v1.
 // Voir doc/api-architecture.md pour le schéma complet.
-import { getItems, getItem, getSubItems, createItem, updateItem, deleteItem, getV1SubItems, createV1Item, deleteV1Item } from './glpi'
+import { getAllItems, getItem, getSubItems, createItem, updateItem, deleteItem, getV1SubItems, createV1Item, deleteV1Item } from './glpi'
 
 // ── Labels affichés dans l'UI ───────────────────────────────────────────────
 
@@ -14,9 +14,26 @@ export const STATUS_LABELS = {
   6: 'Clôturé',
 }
 
-// Sous-ensemble utilisé dans le Kanban — noms affichés dans l'UI NewApp
-export const KANBAN_STATUS_IDS    = [1, 2, 5]
-export const KANBAN_STATUS_LABELS = { 1: 'Nouveau', 2: 'In progress', 5: 'Terminé' }
+// ── Colonnes Kanban ──────────────────────────────────────────────────────────
+// statusIds  : statuts GLPI regroupés/affichés dans la colonne
+// dropStatus : statut posé sur le ticket quand il est déposé dans la colonne
+//
+// "Terminé" regroupe les tickets Clôturés (6) — le drop dans cette colonne
+// applique également le statut Clôturé (6), pas Résolu (5).
+export const KANBAN_COLUMNS = {
+  1: { label: 'Nouveau',     statusIds: [1],    dropStatus: 1 },
+  2: { label: 'In progress', statusIds: [2],    dropStatus: 2 },
+  5: { label: 'Terminé',     statusIds: [6], dropStatus: 6 },
+}
+
+export const KANBAN_STATUS_IDS    = Object.keys(KANBAN_COLUMNS).map(Number)
+export const KANBAN_STATUS_LABELS = Object.fromEntries(
+  Object.entries(KANBAN_COLUMNS).map(([id, col]) => [id, col.label])
+)
+
+// Statut GLPI réel (1-6) → colonne Kanban correspondante (ou null si non affichée)
+export const statusToColumn = (statusId) =>
+  KANBAN_STATUS_IDS.find(cid => KANBAN_COLUMNS[cid].statusIds.includes(statusId)) ?? null
 
 export const PRIORITY_LABELS = {
   1: 'Très basse',
@@ -48,7 +65,7 @@ const ROLE = { REQUESTER: 1, ASSIGNED: 2, OBSERVER: 3 }
 // is_deleted: 0 → exclut les tickets en corbeille côté serveur
 // .filter(!is_deleted) → garde-fou client si le paramètre serveur est ignoré
 export const getTickets = (params = {}) =>
-  getItems('Assistance/Ticket', { sort: 'date_mod', order: 'ASC', is_deleted: 0, ...params })
+  getAllItems('Assistance/Ticket', { sort: 'date_mod', order: 'ASC', is_deleted: 0, ...params })
     .then(items => items.filter(t => !t.is_deleted))
 
 export const getTicket = (id) => getItem('Assistance/Ticket', id)

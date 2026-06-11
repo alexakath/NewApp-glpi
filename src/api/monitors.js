@@ -1,7 +1,7 @@
-import { getItems, getItem } from './glpi'
+import { getAllItems, getItem } from './glpi'
 
 export const getMonitors = (params = {}) =>
-  getItems('Assets/Monitor', { sort: 'name', order: 'ASC', ...params })
+  getAllItems('Assets/Monitor', { sort: 'name', order: 'ASC', ...params })
 
 export const getMonitorFull = async (id) => {
   const monitor = await getItem('Assets/Monitor', id)

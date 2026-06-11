@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react'
-import { getComputers } from '../api/computers'
-import { getMonitors }  from '../api/monitors'
-import { getTickets }   from '../api/tickets'
+import { getAssets, ASSET_TYPES, ASSET_TYPE_KEYS } from '../api/assets'
+import { getTickets } from '../api/tickets'
 import './DashboardPage.css'
-
-// Récupère tous les éléments (pas de limite à 100) pour des comptages exacts
-const ALL = { range: '0-9999' }
 
 function StatCard({ title, total, label, rows }) {
   return (
@@ -17,7 +13,6 @@ function StatCard({ title, total, label, rows }) {
           <span className="stat-card-label">{label}</span>
         </div>
       </div>
-
       <div className="stat-card-rows">
         {rows.map(({ name, count, color }) => (
           <div key={name} className="stat-row">
@@ -45,25 +40,36 @@ function StatCard({ title, total, label, rows }) {
 }
 
 function DashboardPage() {
-  const [data, setData]     = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState(null)
+  const [assetCounts, setAssetCounts] = useState({})
+  const [tickets,     setTickets]     = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [error,       setError]       = useState(null)
 
   useEffect(() => {
-    Promise.all([getComputers(ALL), getMonitors(ALL), getTickets(ALL)])
-      .then(([computers, monitors, tickets]) => setData({ computers, monitors, tickets }))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
+    Promise.all([
+      Promise.all(ASSET_TYPE_KEYS.map(t => getAssets(t).catch(() => []))),
+      getTickets().catch(() => []),
+    ]).then(([lists, tix]) => {
+      const counts = {}
+      ASSET_TYPE_KEYS.forEach((t, i) => {
+        counts[t] = lists[i].filter(a => !a.is_deleted).length
+      })
+      setAssetCounts(counts)
+      setTickets(tix)
+    })
+    .catch(err => setError(err.message))
+    .finally(() => setLoading(false))
   }, [])
 
   if (loading) return <div className="page-state">Chargement du tableau de bord...</div>
   if (error)   return <div className="page-state page-state--error">Erreur : {error}</div>
 
-  const { computers, monitors, tickets } = data
+  // Uniquement les types avec au moins 1 élément
+  const presentTypes = ASSET_TYPE_KEYS.filter(t => (assetCounts[t] ?? 0) > 0)
+  const totalElements = presentTypes.reduce((s, t) => s + assetCounts[t], 0)
 
-  const totalElements = computers.length + monitors.length
-  const incidents     = tickets.filter((t) => t.type === 1).length
-  const demandes      = tickets.filter((t) => t.type === 2).length
+  const incidents = tickets.filter(t => t.type === 1).length
+  const demandes  = tickets.filter(t => t.type === 2).length
 
   const today = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -84,10 +90,11 @@ function DashboardPage() {
           title="Parc informatique"
           total={totalElements}
           label={totalElements !== 1 ? 'éléments' : 'élément'}
-          rows={[
-            { name: 'Ordinateurs', count: computers.length, color: '#2563eb' },
-            { name: 'Moniteurs',   count: monitors.length,  color: '#7c3aed' },
-          ]}
+          rows={presentTypes.map(t => ({
+            name:  ASSET_TYPES[t].label,
+            count: assetCounts[t],
+            color: ASSET_TYPES[t].color,
+          }))}
         />
         <StatCard
           title="Tickets d'assistance"
