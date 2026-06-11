@@ -1,1 +1,56 @@
 /* Styles spécifiques Tickets — le reste vient de index.css */
+.filters-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.filter-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 14px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    font-size: 0.85rem;
+    font-family: var(--font);
+    color: var(--c-text);
+    background: var(--c-surface);
+}
+
+.filter-select {
+    padding: 8px 14px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    font-size: 0.85rem;
+    font-family: var(--font);
+    color: var(--c-text);
+    background: var(--c-surface);
+    cursor: pointer;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    outline: none;
+    border-color: var(--c-accent);
+}
+
+.filter-reset {
+    padding: 8px 16px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    font-size: 0.85rem;
+    font-family: var(--font);
+    font-weight: 500;
+    color: var(--c-text-sec);
+    background: var(--c-surface);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: backgroung 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.filter-reset:hover {
+    background:  var(--c-bg);
+    border-color: #c9d5e0;
+    color: var(--c-text);
+}
