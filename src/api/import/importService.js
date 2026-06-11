@@ -58,13 +58,47 @@ const getCi = (row, ...keys) => {
 const parseCsvFloat = (str) =>
   parseFloat(String(str || '0').replace(',', '.').trim()) || 0
 
-// "03/06/2026" + "13:45" → "2026-06-03 13:45:00"
+// Normalise une heure "HH:MM" ou "HH:MM:SS" → "HH:MM:SS"
+const normalizeTime = (timeStr) => {
+  const m = String(timeStr).trim().match(/^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/)
+  if (!m) return null
+  const [, h, mn, s = '0'] = m
+  return `${h.padStart(2, '0')}:${mn.padStart(2, '0')}:${s.padStart(2, '0')}`
+}
+
+// Convertit une date CSV vers le format attendu par GLPI ("YYYY-MM-DD HH:MM:SS").
+// Formats de date acceptés (heure optionnelle déjà incluse, séparée par un
+// espace ou un "T") :
+//   - "DD/MM/YYYY" ou "DD-MM-YYYY"  (jour/mois/année, format européen)
+//   - "YYYY-MM-DD" ou "YYYY/MM/DD"  (ISO)
+// `heureStr` (colonne "Heure" séparée) est prioritaire si fournie ; sinon
+// l'heure éventuellement incluse dans `dateStr` est utilisée, sinon 00:00:00.
+// Retourne null si aucun format reconnu (le statut "date par défaut système"
+// est alors signalé à l'utilisateur via un warning).
 const parseGlpiDate = (dateStr, heureStr = '') => {
   if (!dateStr) return null
-  const parts = String(dateStr).split('/')
-  if (parts.length !== 3) return null
-  const time = heureStr ? `${heureStr}:00` : '00:00:00'
-  return `${parts[2]}-${parts[1]}-${parts[0]} ${time}`
+  const [datePart, timePart] = String(dateStr).trim().split(/[ T]/)
+
+  let year, month, day
+  let m
+  if ((m = datePart.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/))) {
+    // DD/MM/YYYY ou DD-MM-YYYY
+    ;[, day, month, year] = m
+  } else if ((m = datePart.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/))) {
+    // YYYY-MM-DD ou YYYY/MM/DD
+    ;[, year, month, day] = m
+  } else {
+    return null
+  }
+
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null
+
+  const time = (heureStr && normalizeTime(heureStr))
+    || (timePart && normalizeTime(timePart))
+    || '00:00:00'
+
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${year}-${pad(month)}-${pad(day)} ${time}`
 }
 
 // Supprime les accents et caractères spéciaux pour produire un login valide GLPI
@@ -335,7 +369,11 @@ const importTickets = async (rows, registry, onProgress) => {
 
       if (desc)     body.content  = desc
       const glpiDate = parseGlpiDate(dateStr, heureStr)
-      if (glpiDate) body.date = glpiDate
+      if (glpiDate) {
+        body.date = glpiDate
+      } else if (dateStr) {
+        results.warnings.push({ message: `Date "${dateStr}" non reconnue (ticket "${titre}") — date du jour appliquée par GLPI`, row })
+      }
 
       const typeId = TICKET_TYPE_MAP[typeStr.toLowerCase()]
       if (typeId) body.type = typeId
