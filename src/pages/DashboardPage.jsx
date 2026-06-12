@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { getAssets, ASSET_TYPES, ASSET_TYPE_KEYS } from '../api/assets'
 import { getTickets } from '../api/tickets'
+import { getTicketCosts } from '../api/costs'
 import './DashboardPage.css'
+
+const costAmount = (cost) => 
+((cost.duration || 0) / 3600) * (cost.cost_time || 0)
++ (cost.cost_fixed || 0)
++ (cost.cost_material || 0)
+
 
 function StatCard({ title, total, label, rows }) {
   return (
@@ -45,6 +52,8 @@ function DashboardPage() {
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState(null)
 
+  const [totalTicketsCost, setTotalTicketsCost] = useState(0)
+
   useEffect(() => {
     Promise.all([
       Promise.all(ASSET_TYPE_KEYS.map(t => getAssets(t).catch(() => []))),
@@ -56,6 +65,12 @@ function DashboardPage() {
       })
       setAssetCounts(counts)
       setTickets(tix)
+
+      return Promise.all(tix.map(t => getTicketCosts(t.id).catch(() => [])))
+        .then((costsLists) => {
+          const total = costsLists.flat().reduce((sum, c) => + costAmount(c), 0)
+          setTotalTicketsCost(total)
+        })
     })
     .catch(err => setError(err.message))
     .finally(() => setLoading(false))
@@ -105,6 +120,15 @@ function DashboardPage() {
             { name: 'Demandes',  count: demandes,  color: '#f59e0b' },
           ]}
         />
+      </div>
+      <div className="stat-card stat-card--simple">
+        <div className="stat-card-head">
+          <span className="stat-card-title">Cout total des tickets</span>
+          <div>
+            <span className="stat-card-total">{totalTicketsCost.toFixed(2)}</span>
+            <span className="stat-card-label">Ariary</span>
+          </div>
+        </div>
       </div>
     </div>
   )
