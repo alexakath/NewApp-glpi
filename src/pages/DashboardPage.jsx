@@ -68,7 +68,7 @@ function DashboardPage() {
 
       return Promise.all(tix.map(t => getTicketCosts(t.id).catch(() => [])))
         .then((costsLists) => {
-          const total = costsLists.flat().reduce((sum, c) => + costAmount(c), 0)
+          const total = costsLists.flat().reduce((sum, c) => sum + costAmount(c), 0)
           setTotalTicketsCost(total)
         })
     })
