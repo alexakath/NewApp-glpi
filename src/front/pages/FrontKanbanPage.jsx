@@ -4,7 +4,7 @@ import {
   getTickets, updateTicket,
   KANBAN_STATUS_IDS, KANBAN_STATUS_LABELS, KANBAN_COLUMNS, statusToColumn,
 } from '../../api/tickets'
-import { getKanbanColumns, getKanbanLang } from '../../api/backend'
+import { getKanbanColumns, getKanbanLang, addTicketCostToSQLite } from '../../api/backend'
 import KanbanTicketModal from '../components/KanbanTicketModal'
 import './FrontKanbanPage.css'
 
@@ -31,6 +31,7 @@ export default function FrontKanbanPage() {
   // ── Dialogue résolution (→ Terminé) ─────────────────────────────────────────
   const [dialog,     setDialog]     = useState(null)
   const [resolution, setResolution] = useState('')
+  const [fixedCost, setFixedCost] = useState('')
   const [moving,     setMoving]     = useState(false)
 
   // ── Détail ticket (clic) ─────────────────────────────────────────────────────
@@ -93,6 +94,7 @@ export default function FrontKanbanPage() {
     if (toSid === 5) {
       setDialog({ ticket, fromSid, toSid })
       setResolution('')
+      setFixedCost('')
     } else {
       doMove(ticket, fromSid, toSid)
     }
@@ -103,6 +105,9 @@ export default function FrontKanbanPage() {
     const newStatus = KANBAN_COLUMNS[toSid].dropStatus
     try {
       await updateTicket(ticket.id, { status: newStatus })
+      if (toSid === 5 && fixedCost) {
+        await addTicketCostToSQLite(ticket.id, parseFloat(fixedCost)).catch(() => {})
+      }
       setGrouped(prev => {
         const next = Object.fromEntries(KANBAN_STATUS_IDS.map(cid => [cid, [...prev[cid]]]))
         KANBAN_STATUS_IDS.forEach(s => { next[s] = next[s].filter(t => t.id !== ticket.id) })
@@ -115,6 +120,7 @@ export default function FrontKanbanPage() {
       setMoving(false)
       setDialog(null)
       setResolution('')
+      setFixedCost('')
     }
   }
 
@@ -195,6 +201,20 @@ export default function FrontKanbanPage() {
               autoFocus
               disabled={moving}
             />
+            <label className="fk-dialog-label">
+              Cout fixed
+              <span className="fk-dialog-opt">(optionnel)</span>
+            </label>
+            <input
+              type="number"
+              className="fk-dialog-input"
+              min="0"
+              step="0.01"
+              placeholder="0"
+              value={fixedCost}
+              onChange={e => setFixedCost(e.target.value)}
+              disabled={moving}
+            ></input>
             <div className="fk-dialog-actions">
               <button className="fk-dialog-btn fk-dialog-btn--cancel" onClick={() => setDialog(null)} disabled={moving}>
                 Annuler

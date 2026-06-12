@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import ResetModuleItem from '../components/ResetModuleItem'
 import { getResetStats, trashAllSelected, purgeAllSelected } from '../api/reset/resetService'
 import { RESET_MODULES, getResetOrder } from '../api/reset/resetConfig'
+import { clearTicketCostsFromSQLite } from '../api/backend'
 import './ResetPage.css'
 
 // Page de réinitialisation — pendant "miroir" de ImportPage : au lieu de créer
@@ -128,6 +129,12 @@ const ResetPage = () => {
 
     try {
       const result = await purgeAllSelected(buildSelectedMap(), handleProgress)
+      // Les coûts fixes (table locale `ticket_costs`) ne sont pas gérés par
+      // GLPI : la purge en cascade des tickets ne les efface pas. On les
+      // supprime nous-mêmes dès que le module tickets est purgé.
+      if (selected.tickets) {
+        await clearTicketCostsFromSQLite().catch((err) => console.warn('Purge ticket_costs ignorée', err))
+      }
       setPurgeResult(result)
       await loadStats(false)
       setStep('done')

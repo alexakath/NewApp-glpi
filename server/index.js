@@ -23,6 +23,7 @@ Object.entries(MODULES).forEach(([key, mod]) => {
 // Routes d'écriture custom pour tables indépendantes
 app.use('/api/kanban_columns', require('./routes/kanban'))
 app.use('/api/settings',       require('./routes/settings'))
+app.use('/api/ticket_costs',   require('./routes/ticketCosts'))
 
 // Route de synchronisation générique (POST /api/sync/:moduleKey)
 app.use('/api/sync', require('./routes/sync'))
@@ -36,3 +37,5 @@ app.listen(PORT, () => {
   console.log(`Backend NewApp → http://localhost:${PORT}`)
   console.log(`Modules        : ${Object.keys(MODULES).join(', ')}`)
 })
+
+

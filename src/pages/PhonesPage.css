@@ -1,0 +1,11 @@
+/* Styles spécifiques Moniteurs — le reste vient de index.css */
+
+.state-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: #d1fae5;
+  color: #065f46;
+}
