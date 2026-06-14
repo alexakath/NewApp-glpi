@@ -4,7 +4,7 @@ import {
   getTickets, updateTicket,
   KANBAN_STATUS_IDS, KANBAN_STATUS_LABELS, KANBAN_COLUMNS, statusToColumn,
 } from '../../api/tickets'
-import { getKanbanColumns, getKanbanLang } from '../../api/backend'
+import { getKanbanColumns, getKanbanLang, addTicketCostToSQLite, getTicketCostsForTicket, deleteTicketCostFromSQLite } from '../../api/backend'
 import KanbanTicketModal from '../components/KanbanTicketModal'
 import './FrontKanbanPage.css'
 
@@ -31,7 +31,13 @@ export default function FrontKanbanPage() {
   // ── Dialogue résolution (→ Terminé) ─────────────────────────────────────────
   const [dialog,     setDialog]     = useState(null)
   const [resolution, setResolution] = useState('')
+  const [fixedCost, setFixedCost] = useState('')
   const [moving,     setMoving]     = useState(false)
+
+  const [reopenDialog, setReopenDialog] = useState(null)
+  const [reopenPercent, setReopenPercent] = useState('')
+  const [reopenBusy, setReopenBusy] = useState(false)
+
 
   // ── Détail ticket (clic) ─────────────────────────────────────────────────────
   const [selectedId, setSelectedId] = useState(null)
@@ -93,32 +99,98 @@ export default function FrontKanbanPage() {
     if (toSid === 5) {
       setDialog({ ticket, fromSid, toSid })
       setResolution('')
+      setFixedCost('')
+    } else if ( fromSid === 5 && toSid === 2) {
+      openReopenDialog(ticket, fromSid, toSid)
     } else {
       doMove(ticket, fromSid, toSid)
     }
   }
 
+  const moveTicketStatus = async (ticket, fromSid, toSid) => {
+    const newStatus = KANBAN_COLUMNS[toSid].dropStatus
+    await updateTicket(ticket.id, { status: newStatus})
+    setGrouped(prev => {
+      const next = Object.fromEntries(KANBAN_STATUS_IDS.map(cid => [cid, [...prev[cid]]]))
+      KANBAN_STATUS_IDS.forEach(s => { next[s] = next[s].filter(t => t.id !==ticket.id)})
+      next[toSid] = [...next[toSid], {...ticket, status: newStatus}]
+      return next
+    })
+  }  
+
   const doMove = async (ticket, fromSid, toSid) => {
     setMoving(true)
-    const newStatus = KANBAN_COLUMNS[toSid].dropStatus
     try {
-      await updateTicket(ticket.id, { status: newStatus })
-      setGrouped(prev => {
-        const next = Object.fromEntries(KANBAN_STATUS_IDS.map(cid => [cid, [...prev[cid]]]))
-        KANBAN_STATUS_IDS.forEach(s => { next[s] = next[s].filter(t => t.id !== ticket.id) })
-        next[toSid] = [...next[toSid], { ...ticket, status: newStatus }]
-        return next
-      })
+      await moveTicketStatus(ticket, fromSid, toSid)
+      if (toSid === 5 && fixedCost) {
+        await addTicketCostToSQLite(ticket.id, parseFloat(fixedCost)).catch(() => {})
+      }
     } catch (err) {
       alert(`Erreur lors du changement de statut : ${err.message}`)
     } finally {
       setMoving(false)
       setDialog(null)
       setResolution('')
+      setFixedCost('')
     }
   }
 
   const confirmDialog = () => dialog && doMove(dialog.ticket, dialog.fromSid, dialog.toSid)
+
+  const openReopenDialog = async (ticket, fromSid, toSid) => {
+    setReopenPercent('')
+    let totalSum = 0
+    let lastFixedId =null
+    try {
+      const rows = await getTicketCostsForTicket(ticket.id)
+      const list = Array.isArray(rows) ? rows : []
+      totalSum = list.reduce((sum, r) => sum + (r.fixed_cost || 0), 0)
+      const lastFixed = list.find(r => (r.type || 'fixed') === 'fixed')
+      lastFixedId = lastFixed?.id ?? null
+    } catch {/* aucun coût enregistré */ }
+    setReopenDialog({ticket, fromSid, toSid, totalSum, lastFixedId})
+  }
+
+  const cancelReopenDialog = () => {
+    if (reopenBusy) return
+    setReopenDialog(null)
+    setReopenPercent('')
+  }
+
+  const cancelReopen = async () => {
+    if(!reopenDialog) return
+    const { ticket, fromSid, toSid, lastFixedId} = reopenDialog
+    setReopenBusy(true)
+    try{
+      await moveTicketStatus(ticket, fromSid, toSid)
+      if (lastFixedId) await deleteTicketCostFromSQLite(lastFixedId).catch(() => {})
+    } catch(err) {
+      alert(`Erreur lors du changement de statut : ${err.message}`)
+    } finally {
+      setReopenBusy(false)
+      setReopenDialog(null)
+      setReopenPercent('')
+    }
+  }
+
+  const confirmReopen = async () => {
+    if (!reopenDialog) return
+    const pct = parseFloat(reopenPercent)
+    if(!pct) return
+    const { ticket, fromSid, toSid, totalSum } = reopenDialog
+    setReopenBusy(true)
+    try {
+      await moveTicketStatus(ticket, fromSid, toSid)
+      const reopenCost = totalSum * (pct / 100)
+      await addTicketCostToSQLite(ticket.id, reopenCost, 'reopen').catch(() => {})
+    } catch (err) {
+      alert (`Erreur lors du changement de statut : ${err.message}`)
+    } finally {
+      setReopenBusy(false)
+      setReopenDialog(null)
+      setReopenPercent('')
+    }
+  }
 
   // ── Rendu ────────────────────────────────────────────────────────────────────
   if (loading) return <p className="fk-state">Chargement…</p>
@@ -195,6 +267,20 @@ export default function FrontKanbanPage() {
               autoFocus
               disabled={moving}
             />
+            <label className="fk-dialog-label">
+              Cout fixed
+              <span className="fk-dialog-opt">(optionnel)</span>
+            </label>
+            <input
+              type="number"
+              className="fk-dialog-input"
+              min="0"
+              step="0.01"
+              placeholder="0"
+              value={fixedCost}
+              onChange={e => setFixedCost(e.target.value)}
+              disabled={moving}
+            ></input>
             <div className="fk-dialog-actions">
               <button className="fk-dialog-btn fk-dialog-btn--cancel" onClick={() => setDialog(null)} disabled={moving}>
                 Annuler
@@ -202,6 +288,45 @@ export default function FrontKanbanPage() {
               <button className="fk-dialog-btn fk-dialog-btn--confirm" onClick={confirmDialog} disabled={moving}>
                 {moving ? 'Mise à jour…' : 'Confirmer'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reopenDialog && (
+        <div className="fk-overlay" onClick={cancelReopenDialog}>
+          <div className="fk-dialog" onClick={e => e.stopPropagation()}>
+            <h2 className="fk-dialog-title">Reouverture du ticket</h2>
+            <p className="fk-dialog-sub"><strong>{reopenDialog.ticket.name}</strong> va repasser dans la colonne <strong>{colTitle(2)}</strong></p>
+            <p className="fk-dialog-sub">
+              Dernier cout : <strong>{reopenDialog.totalSum.toFixed(2)} €</strong>
+            </p>
+            <label className="fk-dialog-label">
+              Pourcentage de Reouverture
+              <span className="fk-dialog-opt">(ex : 10) </span>
+            </label>
+            <input type="number" 
+            className="fk-dialog-input"
+            min="0"
+            step="0.01"
+            placeholder="0"
+            value={reopenPercent}
+            onChange={e => setReopenPercent(e.target.value)}
+            disabled={reopenBusy}
+            />
+            {reopenPercent && (
+              <p className="fk-dialog-sub">
+                Cout de reouverture : <strong>{reopenPercent} %</strong>
+              </p>
+            )}
+            <div className=" fk-dialog-actions">
+              <button className="fk-dialog-btn fk-dialog-btn--cancel" onClick={cancelReopen} disabled={reopenBusy}>
+                {reopenBusy ? '...' : 'Annulation'}
+              </button>
+              <button className="fk-dialog-btn fk-dialog-btn--confirm" onClick={confirmReopen} disabled={reopenBusy || !reopenPercent}>
+                {reopenBusy ? '...' : 'Reouverture'}
+              </button>
+
             </div>
           </div>
         </div>

@@ -91,6 +91,18 @@ const MODULES = {
       )
     `,
   },
+  ticket_costs: {
+    orderBy: 'created_at DESC',
+    schema: `
+      CREATE TABLE IF NOT EXISTS ticket_costs (
+        id  INTEGER PRIMARY KEY AUTOINCREMENT,
+        ticket_id   INTEGER NOT NULL,
+        fixed_cost  REAL NOT NULL,
+        type TEXT NOT NULL DEFAULT 'fixed',
+        created_at TEXT    DEFAULT (datetime('now'))
+      )
+    `,
+  },
 }
 
 module.exports = { MODULES, toInt, toStr }

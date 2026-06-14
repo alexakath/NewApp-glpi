@@ -66,3 +66,18 @@ export const updateKanbanColumn = (statusId, patch) =>
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(patch),
   }).then(json)
+
+  export const addTicketCostToSQLite = (ticketId, fixedCost, type='fixed') =>
+  fetch(`${BASE}/ticket_costs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ticket_id: ticketId, fixed_cost: fixedCost, type }),
+  }).then(json)
+
+  export const getTicketCostsForTicket = (ticketId) =>
+    fetch(`${BASE}/ticket_costs/ticket/${ticketId}`).then(json)
+
+   export const deleteTicketCostFromSQLite = (id) =>
+    fetch(`${BASE}/ticket_costs/${id}`, { method: 'DELETE'}).then(json)
+
+export const clearTicketCostsFromSQLite = () => clearFromSQLite('ticket_costs')

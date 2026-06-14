@@ -166,6 +166,16 @@
   font-family: inherit;
 }
 .fk-dialog-textarea:focus { outline: none; border-color: #6366f1; }
+.fk-dialog-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #111827;;
+  box-sizing: border-box;
+  font-family: inherit;
+}
 .fk-dialog-actions {
   display: flex;
   justify-content: flex-end;

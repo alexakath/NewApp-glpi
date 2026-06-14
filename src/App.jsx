@@ -6,10 +6,12 @@ import TicketsPage from './pages/TicketsPage'
 import TicketCostsPage from './pages/TicketCostsPage'
 import ComputersPage from './pages/ComputersPage'
 import MonitorsPage from './pages/MonitorsPage'
+import PhonesPage from './pages/PhonesPage'
 import LoginPage from './pages/LoginPage'
 import TicketDetail from './components/TicketDetail'
 import ComputerDetail from './components/ComputerDetail'
 import MonitorDetail from './components/MonitorDetail'
+import PhoneDetail from './components/PhoneDetail'
 import ImportPage from './pages/ImportPage'
 import ResetPage from './pages/ResetPage'
 import TestSQLitePage from './pages/TestSQLitePage'
@@ -50,7 +52,9 @@ function App() {
         <Route path="/computers"       element={<ComputersPage />} />
         <Route path="/computers/:id"   element={<ComputerDetail />} />
         <Route path="/monitors"        element={<MonitorsPage />} />
+        <Route path="/phones"        element={<PhonesPage />} />
         <Route path="/monitors/:id"    element={<MonitorDetail />} />
+        <Route path="/phones/:id"    element={<PhoneDetail />} />
         <Route path="/import"          element={<ImportPage />} />
         <Route path="/reset"           element={<ResetPage />} />
         <Route path="/test-sqlite"     element={<TestSQLitePage />} />

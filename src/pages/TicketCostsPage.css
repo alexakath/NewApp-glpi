@@ -1,3 +1,165 @@
+/* ── Section "Coût par élément" ─────────────── */
+
+.cost-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 2rem 0 1rem;
+}
+
+.cost-section-header h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--c-text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ── Filtre par élément ─────────────────────── */
+
+.cost-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+}
+
+.cost-filter-bar label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--c-text-sec);
+}
+
+.cost-filter-bar select {
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-sm);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.825rem;
+  font-family: var(--font);
+  color: var(--c-text);
+  background: var(--c-surface);
+  min-width: 240px;
+}
+
+/* ── Colonnes coût (liste) ───────────────────── */
+
+.cost-cell {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.cost-element-table th:nth-child(n+3) {
+  text-align: right;
+}
+
+.cost-detail-table th:nth-child(2),
+.cost-detail-table th:nth-child(3),
+.cost-detail-table th:nth-child(4),
+.cost-detail-table th:nth-child(6),
+.cost-detail-table th:nth-child(7),
+.cost-detail-table th:nth-child(8) {
+  text-align: right;
+}
+
+
+.cost-cell--total {
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.cost-footer-row td {
+  border-top: 1px solid var(--c-border);
+  border-bottom: none;
+}
+
+.cost-footer-label {
+  text-align: right;
+  font-weight: 700;
+  color: var(--c-text);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+
+.cost-cell--footer {
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+/* ── Tableau "Coût par élément" — lignes dépliables ─ */
+
+.cost-expand-col {
+  width: 2rem;
+}
+
+.cost-expand-cell {
+  text-align: center;
+  color: var(--c-text-muted);
+}
+
+.cost-expand-icon {
+  display: inline-block;
+  font-size: 0.7rem;
+  transition: transform 0.12s;
+}
+
+.cost-expand-icon.is-open {
+  transform: rotate(90deg);
+}
+
+.cost-element-row {
+  cursor: pointer;
+}
+
+.cost-element-row:hover {
+  background: var(--c-bg);
+}
+
+.cost-element-row.is-open {
+  background: var(--c-accent-soft);
+}
+
+.cost-detail-row > td {
+  padding: 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.cost-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--c-bg);
+}
+
+.cost-detail-table th,
+.cost-detail-table td {
+  padding: 0.5rem 1.5rem;
+  font-size: 0.8rem;
+  color: var(--c-text-sec);
+  text-align: left;
+  border-bottom: 1px solid var(--c-border-soft);
+}
+
+.cost-detail-table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: var(--c-text-muted);
+}
+
+.cost-detail-table tr:last-child td {
+  border-bottom: none;
+}
+
+.cost-detail-table .cost-cell {
+  color: var(--c-text-sec);
+}
+
+.cost-detail-table .cost-cell--total {
+  color: var(--c-text);
+}
+
 /* ── Bouton coût ────────────────────────────── */
 
 .cost-action-cell {
