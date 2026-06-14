@@ -12,6 +12,10 @@ db.pragma('journal_mode = WAL')
 // Crée toutes les tables déclarées dans modules/index.js
 Object.values(MODULES).forEach(mod => db.exec(mod.schema))
 
+const ticketCostsCols = db.prepare("PRAGMA table_info(ticket_costs)").all().map(c => c.name)
+if(!ticketCostsCols.includes('type')) {
+  db.exec("ALTER TABLE ticket_costs ADD COLUMN type TEXT NOT NULL DEFAULT 'fixed'")
+}
 // Table settings — indépendante, pas dans MODULES (routes custom uniquement)
 db.exec(`
   CREATE TABLE IF NOT EXISTS settings (

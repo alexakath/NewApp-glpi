@@ -31,6 +31,7 @@ function TicketCostsPage() {
   const [importCosts, setImportCosts] = useState({})
   // ticketId → somme des coûts fixes saisis dans le kanban (SQLite)
   const [fixedCosts, setFixedCosts]   = useState({})
+  const [reopenCosts, setReopenCosts] = useState({})
   // clés des lignes "élément" actuellement dépliées (détail par ticket)
   const [expandedElements, setExpandedElements] = useState(new Set())
 
@@ -61,10 +62,14 @@ function TicketCostsPage() {
 
         // Coûts fixes (SQLite) — somme par ticket
         const fixedMap = {}
+        const reopenMap = {}
+
         ;(Array.isArray(sqliteCosts) ? sqliteCosts : []).forEach((row) => {
-          fixedMap[row.ticket_id] = (fixedMap[row.ticket_id] || 0) + (row.fixed_cost || 0)
+          const map = row.type === 'reopen' ? reopenMap : fixedMap
+          map[row.ticket_id] = (map[row.ticket_id] || 0) + (row.fixed_cost || 0)
         })
         setFixedCosts(fixedMap)
+        setReopenCosts(reopenMap)
 
         // Coûts import (GLPI) — somme par ticket
         const importMap = {}
@@ -125,34 +130,40 @@ function TicketCostsPage() {
       if (items.length === 0) return
       const ticketImport = importCosts[t.id] || 0
       const ticketFixed  = fixedCosts[t.id] || 0
+      const ticketReopen  = reopenCosts[t.id] || 0
       const importShare  = ticketImport / items.length
       const fixedShare   = ticketFixed / items.length
+      const reopenShare   = ticketReopen / items.length
       items.forEach((item) => {
-        const entry = map.get(item.key) ?? { ...item, fixedTotal: 0, importTotal: 0, ticketCount: 0, details: [] }
+        const entry = map.get(item.key) ?? { ...item, fixedTotal: 0, importTotal: 0, reopenTotal: 0, ticketCount: 0, details: [] }
         entry.fixedTotal  += fixedShare
         entry.importTotal += importShare
+        entry.reopenTotal += reopenShare
         entry.ticketCount += 1
         entry.details.push({
           ticketId:   t.id,
           ticketName: t.name,
           ticketImport,
           ticketFixed,
+          ticketReopen,
           itemCount:  items.length,
           importShare,
           fixedShare,
+          reopenShare,
         })
         map.set(item.key, entry)
       })
     })
     return [...map.values()].sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-  }, [tickets, ticketItems, importCosts, fixedCosts])
+  }, [tickets, ticketItems, importCosts, fixedCosts, reopenCosts])
 
   if (loading) return <div className="page-state">Chargement des tickets...</div>
   if (error)   return <div className="page-state page-state--error">Erreur : {error}</div>
 
   const totalFixedAll  = elementCosts.reduce((sum, e) => sum + e.fixedTotal, 0)
   const totalImportAll = elementCosts.reduce((sum, e) => sum + e.importTotal, 0)
-  const grandTotalAll  = totalFixedAll + totalImportAll
+  const totalReopenAll = elementCosts.reduce((sum, e) => sum + e.reopenTotal, 0)
+  const grandTotalAll  = totalFixedAll + totalImportAll + totalReopenAll
 
   const toggleElement = (key) => setExpandedElements((prev) => {
     const next = new Set(prev)
@@ -179,6 +190,7 @@ function TicketCostsPage() {
               <th>Élément</th>
               <th>Coût saisi</th>
               <th>Coût import</th>
+              <th>Frais de reouverture</th>
               <th>Total</th>
             </tr>
           </thead>
@@ -199,20 +211,23 @@ function TicketCostsPage() {
                     </td>
                     <td className="cost-cell">{fmtMoney(el.fixedTotal)} €</td>
                     <td className="cost-cell">{fmtMoney(el.importTotal)} €</td>
-                    <td className="cost-cell cost-cell--total">{fmtMoney(el.fixedTotal + el.importTotal)} €</td>
+                    <td className="cost-cell">{fmtMoney(el.reopenTotal)} €</td>
+                    <td className="cost-cell cost-cell--total">{fmtMoney(el.fixedTotal + el.importTotal + el.reopenTotal)} €</td>
                   </tr>
                   {isOpen && (
                     <tr className="cost-detail-row">
-                      <td colSpan="5">
+                      <td colSpan="6">
                         <table className="cost-detail-table">
                           <thead>
                             <tr>
                               <th>Ticket</th>
                               <th>Coût saisi du ticket</th>
                               <th>Coût import du ticket</th>
+                              <th>Frais de reouverture du ticket</th>
                               <th>Répartition</th>
                               <th>Part saisi attribuée</th>
                               <th>Part import attribuée</th>
+                              <th>Part reouverture attribuée</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -221,11 +236,13 @@ function TicketCostsPage() {
                                 <td>#{d.ticketId} — {d.ticketName}</td>
                                 <td className="cost-cell">{fmtMoney(d.ticketFixed)} €</td>
                                 <td className="cost-cell">{fmtMoney(d.ticketImport)} €</td>
+                                <td className="cost-cell">{fmtMoney(d.ticketReopen)} €</td>
                                 <td className="muted">
                                   {d.itemCount > 1 ? `÷ ${d.itemCount} éléments` : 'Entièrement attribué'}
                                 </td>
                                 <td className="cost-cell">{fmtMoney(d.fixedShare)} €</td>
                                 <td className="cost-cell">{fmtMoney(d.importShare)} €</td>
+                                <td className="cost-cell">{fmtMoney(d.reopenShare)} €</td>
                               </tr>
                             ))}
                           </tbody>
@@ -243,6 +260,7 @@ function TicketCostsPage() {
                 <td colSpan="2" className="cost-footer-label">Total</td>
                 <td className="cost-cell cost-cell--footer">{fmtMoney(totalFixedAll)} €</td>
                 <td className="cost-cell cost-cell--footer">{fmtMoney(totalImportAll)} €</td>
+                <td className="cost-cell cost-cell--footer">{fmtMoney(totalReopenAll)} €</td>
                 <td className="cost-cell cost-cell--footer cost-cell--total">{fmtMoney(grandTotalAll)} €</td>
               </tr>
             </tfoot>

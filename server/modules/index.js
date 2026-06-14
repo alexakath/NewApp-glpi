@@ -98,6 +98,7 @@ const MODULES = {
         id  INTEGER PRIMARY KEY AUTOINCREMENT,
         ticket_id   INTEGER NOT NULL,
         fixed_cost  REAL NOT NULL,
+        type TEXT NOT NULL DEFAULT 'fixed',
         created_at TEXT    DEFAULT (datetime('now'))
       )
     `,

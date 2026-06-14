@@ -55,8 +55,10 @@
 
 .cost-detail-table th:nth-child(2),
 .cost-detail-table th:nth-child(3),
-.cost-detail-table th:nth-child(5),
-.cost-detail-table th:nth-child(6) {
+.cost-detail-table th:nth-child(4),
+.cost-detail-table th:nth-child(6),
+.cost-detail-table th:nth-child(7),
+.cost-detail-table th:nth-child(8) {
   text-align: right;
 }
 
