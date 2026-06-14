@@ -49,6 +49,18 @@
   font-weight: 500;
 }
 
+.cost-element-table th:nth-child(n+3) {
+  text-align: right;
+}
+
+.cost-detail-table th:nth-child(2),
+.cost-detail-table th:nth-child(3),
+.cost-detail-table th:nth-child(5),
+.cost-detail-table th:nth-child(6) {
+  text-align: right;
+}
+
+
 .cost-cell--total {
   font-weight: 700;
   color: var(--c-text);
