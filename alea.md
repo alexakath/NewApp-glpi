@@ -27,3 +27,24 @@ TicketStatut initialStatut suivantActionTicket "surchauffe"TerminéEn coursAnnul
 Flux global :
 
 Nouveau → Terminé → En cours (réouverture) → Terminé (ou Annulé)
+
+
+
+
+Page fanaovana import : mouvement nitranga natao tanana
+import csv trois colonnes 
+colonne 1 : ticket (ticket efa misy)
+colonne 2 : mvt
+colonne 3 : valeur
+
+ex : 2,open,5 (open na reopen)
+ticket 2, reouverture, 5%
+
+2,cancel
+ticket 2,cancel (annulation, tsisy valeur)
+
+2,close,100
+ticket 2, close, 100 (termine avec cout fixe 100)
+
+clique laptop : item 1, item 2
+ex : moniteur : hita hoe firy le moniteur ao de ina avy niseo tamreo (le detail, prix reouverture, etc)
