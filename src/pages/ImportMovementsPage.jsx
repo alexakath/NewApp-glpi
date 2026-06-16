@@ -8,7 +8,7 @@ import './ImportMovementsPage.css'
 // ── 1. LA FONCTION MÉTIER — source de vérité ─────────────────────────────────
 // Appelée à l'identique depuis la saisie manuelle ET l'import CSV.
 // Elle ne sait pas d'où viennent refStr, mvt, valStr — elle fait juste son travail.
-const processOneMovement = async (refStr, mvt, valStr, ticketsByRef, ticketsById) => {
+const processOneMovement = async (refStr, mvt, valStr, mode, ticketsByRef, ticketsById) => {
   const ticket = ticketsByRef[refStr] ?? ticketsById[parseInt(refStr)]
   const label  = `"${refStr}" — ${mvt}`
   if (!ticket) return { row: label, status: 'error', msg: `Ticket "${refStr}" introuvable` }
@@ -17,14 +17,14 @@ const processOneMovement = async (refStr, mvt, valStr, ticketsByRef, ticketsById
     if (mvt === 'close') {
       const cost = parseFloat(valStr) || 0
       await updateTicket(ticket.id, { status: KANBAN_COLUMNS[5].dropStatus })
-      if (cost > 0) await addTicketCostToSQLite(ticket.id, cost, 'fixed')
+      await addTicketCostToSQLite(ticket.id, cost, 'fixed', )
       return { row: label, status: 'ok', msg: `Terminé${cost > 0 ? ` — coût ${cost}` : ''}` }
 
     } else if (mvt === 'open' || mvt === 'reopen') {
       const pct = parseFloat(valStr) || 0
       await updateTicket(ticket.id, { status: KANBAN_COLUMNS[2].dropStatus })
-      const { base, cost: reopenCost } = await applyReopenCost(ticket.id, pct)
-      return { row: label, status: 'ok', msg: `Réouvert — ${pct}% de ${base.toFixed(2)} = ${reopenCost.toFixed(2)}` }
+      const { base, cost: reopenCost } = await applyReopenCost(ticket.id, pct, parseInt(mode) || 1)
+      return { row: label, status: 'ok', msg: `Réouvert(mode ${parseInt(mode) || 1}) — ${pct}% de ${base.toFixed(2)} = ${reopenCost.toFixed(2)}` }
 
     } else if (mvt === 'cancel') {
       await updateTicket(ticket.id, { status: KANBAN_COLUMNS[2].dropStatus })
@@ -60,14 +60,15 @@ function ImportMovementsPage() {
   const [ref,       setRef]       = useState('')
   const [mouvement, setMouvement] = useState('')
   const [valeur,    setValeur]    = useState('')
-
+  const [mode, setMode] = useState(1)
+  
   // ── 2. APPEL DEPUIS L'INTERFACE (saisie manuelle) ────────────────────────
   const handleManuel = async () => {
     setRunning(true)
     try {
       const maps   = await loadTicketMaps()
       const result = await processOneMovement(
-        ref.trim(), mouvement, valeur.trim(),
+        ref.trim(), mouvement, valeur.trim(), mode,
         maps.ticketsByRef, maps.ticketsById,
       )
       setResults(prev => [...prev, result])
@@ -93,8 +94,8 @@ function ImportMovementsPage() {
     }
     const out = []
     for (const row of rows) {
-      const [refStr, mvt, valStr] = row.map(s => (s ?? '').toString().trim())
-      const result = await processOneMovement(refStr, mvt, valStr, maps.ticketsByRef, maps.ticketsById)
+      const [refStr, mvt, valStr, modeStr] = row.map(s => (s ?? '').toString().trim())
+      const result = await processOneMovement(refStr, mvt, valStr, modeStr,maps.ticketsByRef, maps.ticketsById)
       out.push(result)
       setResults([...out])
     }
@@ -137,7 +138,7 @@ function ImportMovementsPage() {
           <select
             className="imv-select"
             value={mouvement}
-            onChange={e => { setMouvement(e.target.value); setValeur('') }}
+            onChange={e => { setMouvement(e.target.value); setValeur(''); setMode(1) }}
             disabled={running}
           >
             <option value="">— mouvement —</option>
@@ -158,6 +159,13 @@ function ImportMovementsPage() {
             min="0"
             step="0.01"
           />
+          {mouvement === 'open' && (
+            <select value={mode} onChange={e => setMode(parseInt(e.target.value))} disabled={running}>
+              <option value={1}>Mode 1 - dernier cout saisi</option>
+              <option value={2}>Mode 2 - premier cout saisi</option>
+              <option value={3}>Mode 3 - moyenne de tous les couts saisi</option>
+              <option value={4}>Mode 4 - total de tous les cout saisi</option></select>
+          )}
           <button
             className="imv-traiter-btn"
             onClick={handleManuel}
@@ -172,7 +180,7 @@ function ImportMovementsPage() {
       <div className="imv-card" style={{ marginTop: '1rem' }}>
         <h2 className="imv-section-title">Importation CSV</h2>
         <p className="imv-desc">
-          Format : <code>ref_ticket,mouvement,valeur</code><br />
+          Format : <code>ref_ticket,mouvement,valeur, mode</code><br />
           <code>open</code> / <code>reopen</code> + % &nbsp;·&nbsp;
           <code>close</code> + montant &nbsp;·&nbsp;
           <code>cancel</code>

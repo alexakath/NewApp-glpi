@@ -39,6 +39,8 @@ export default function FrontKanbanPage() {
   const [reopenPercent, setReopenPercent] = useState('')
   const [reopenBusy, setReopenBusy] = useState(false)
 
+  const [reopenMode, setReopenMode] = useState(1)
+
 
   // ── Détail ticket (clic) ─────────────────────────────────────────────────────
   const [selectedId, setSelectedId] = useState(null)
@@ -123,7 +125,7 @@ export default function FrontKanbanPage() {
     setMoving(true)
     try {
       await moveTicketStatus(ticket, fromSid, toSid)
-      if (toSid === 5 && fixedCost) {
+      if (toSid === 5 && fixedCost !== '') {
         await addTicketCostToSQLite(ticket.id, parseFloat(fixedCost)).catch(() => {})
       }
     } catch (err) {
@@ -152,6 +154,7 @@ export default function FrontKanbanPage() {
     if (reopenBusy) return
     setReopenDialog(null)
     setReopenPercent('')
+    setReopenMode(1)
   }
 
   const cancelReopen = async () => {
@@ -167,6 +170,7 @@ export default function FrontKanbanPage() {
       setReopenBusy(false)
       setReopenDialog(null)
       setReopenPercent('')
+      setReopenMode(1)
     }
   }
 
@@ -178,13 +182,14 @@ export default function FrontKanbanPage() {
     setReopenBusy(true)
     try {
       await moveTicketStatus(ticket, fromSid, toSid)
-      await applyReopenCost(ticket.id, pct)
+      await applyReopenCost(ticket.id, pct, reopenMode)
     } catch (err) {
       alert (`Erreur lors du changement de statut : ${err.message}`)
     } finally {
       setReopenBusy(false)
       setReopenDialog(null)
       setReopenPercent('')
+      setReopenMode(1)
     }
   }
 
@@ -315,6 +320,14 @@ export default function FrontKanbanPage() {
                 Cout de reouverture : <strong>{reopenPercent} %</strong>
               </p>
             )}
+            <label className="fk-dialog-label">Mode de calcul</label>
+            <select value={reopenMode} onChange={e => setReopenMode(parseInt(e.target.value))} disabled={reopenBusy}>
+              <option value={1}>Mode 1 - dernier cout fixe</option>
+              <option value={2}>Mode 2 - premier cout fixe</option>
+              <option value={3}>Mode 3 - moyenne de tous les couts saisie</option>
+              <option value={4}>Mode 4 - total de tous cout fixe</option>
+
+            </select>
             <div className=" fk-dialog-actions">
               <button className="fk-dialog-btn fk-dialog-btn--cancel" onClick={cancelReopen} disabled={reopenBusy}>
                 {reopenBusy ? '...' : 'Annulation'}
