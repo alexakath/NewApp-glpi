@@ -4,7 +4,8 @@ import {
   getTickets, updateTicket,
   KANBAN_STATUS_IDS, KANBAN_STATUS_LABELS, KANBAN_COLUMNS, statusToColumn,
 } from '../../api/tickets'
-import { getKanbanColumns, getKanbanLang, addTicketCostToSQLite, getTicketCostsForTicket, deleteTicketCostFromSQLite } from '../../api/backend'
+import { getKanbanColumns, getKanbanLang, addTicketCostToSQLite } from '../../api/backend'
+import { getLastFixedCost, applyReopenCost, cancelLastFixedCost } from '../../api/ticketCostActions'
 import KanbanTicketModal from '../components/KanbanTicketModal'
 import './FrontKanbanPage.css'
 
@@ -140,15 +141,11 @@ export default function FrontKanbanPage() {
   const openReopenDialog = async (ticket, fromSid, toSid) => {
     setReopenPercent('')
     let totalSum = 0
-    let lastFixedId =null
     try {
-      const rows = await getTicketCostsForTicket(ticket.id)
-      const list = Array.isArray(rows) ? rows : []
-      totalSum = list.reduce((sum, r) => sum + (r.fixed_cost || 0), 0)
-      const lastFixed = list.find(r => (r.type || 'fixed') === 'fixed')
-      lastFixedId = lastFixed?.id ?? null
+      const lastFixed = await getLastFixedCost(ticket.id)
+      totalSum = lastFixed?.fixed_cost ?? 0
     } catch {/* aucun coût enregistré */ }
-    setReopenDialog({ticket, fromSid, toSid, totalSum, lastFixedId})
+    setReopenDialog({ ticket, fromSid, toSid, totalSum })
   }
 
   const cancelReopenDialog = () => {
@@ -159,11 +156,11 @@ export default function FrontKanbanPage() {
 
   const cancelReopen = async () => {
     if(!reopenDialog) return
-    const { ticket, fromSid, toSid, lastFixedId} = reopenDialog
+    const { ticket, fromSid, toSid } = reopenDialog
     setReopenBusy(true)
     try{
       await moveTicketStatus(ticket, fromSid, toSid)
-      if (lastFixedId) await deleteTicketCostFromSQLite(lastFixedId).catch(() => {})
+      await cancelLastFixedCost(ticket.id)
     } catch(err) {
       alert(`Erreur lors du changement de statut : ${err.message}`)
     } finally {
@@ -177,12 +174,11 @@ export default function FrontKanbanPage() {
     if (!reopenDialog) return
     const pct = parseFloat(reopenPercent)
     if(!pct) return
-    const { ticket, fromSid, toSid, totalSum } = reopenDialog
+    const { ticket, fromSid, toSid } = reopenDialog
     setReopenBusy(true)
     try {
       await moveTicketStatus(ticket, fromSid, toSid)
-      const reopenCost = totalSum * (pct / 100)
-      await addTicketCostToSQLite(ticket.id, reopenCost, 'reopen').catch(() => {})
+      await applyReopenCost(ticket.id, pct)
     } catch (err) {
       alert (`Erreur lors du changement de statut : ${err.message}`)
     } finally {

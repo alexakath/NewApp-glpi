@@ -67,7 +67,14 @@ export const updateKanbanColumn = (statusId, patch) =>
     body:    JSON.stringify(patch),
   }).then(json)
 
-  export const addTicketCostToSQLite = (ticketId, fixedCost, type='fixed') =>
+  export const setTicketRefUser = (glpiId, refUser) =>
+  fetch(`${BASE}/tickets/${glpiId}/ref`, {
+    method:  'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ ref_user: refUser }),
+  }).then(json)
+
+export const addTicketCostToSQLite = (ticketId, fixedCost, type='fixed') =>
   fetch(`${BASE}/ticket_costs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

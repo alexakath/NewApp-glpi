@@ -2,6 +2,7 @@ require('dotenv').config()
 const express            = require('express')
 const cors               = require('cors')
 const { MODULES }        = require('./modules')
+const db                 = require('./db')
 const makeResourceRouter = require('./routes/resource')
 const { seedKanban, seedSettings } = require('./seeds')
 
@@ -27,6 +28,18 @@ app.use('/api/ticket_costs',   require('./routes/ticketCosts'))
 
 // Route de synchronisation générique (POST /api/sync/:moduleKey)
 app.use('/api/sync', require('./routes/sync'))
+
+// Associe une référence utilisateur stable à un ticket GLPI (survit aux syncs)
+app.put('/api/tickets/:id/ref', (req, res) => {
+  const { id } = req.params
+  const { ref_user } = req.body ?? {}
+  if (ref_user == null) return res.status(400).json({ error: 'ref_user manquant' })
+  db.prepare(`
+    INSERT INTO tickets (id, ref_user) VALUES (?, ?)
+    ON CONFLICT(id) DO UPDATE SET ref_user = excluded.ref_user
+  `).run(Number(id), String(ref_user))
+  res.json({ ok: true })
+})
 
 // Health check
 app.get('/api/health', (req, res) =>

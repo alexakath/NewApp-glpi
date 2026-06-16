@@ -17,6 +17,9 @@ import ResetPage from './pages/ResetPage'
 import TestSQLitePage from './pages/TestSQLitePage'
 import TestKanbanPage from './pages/TestKanbanPage'
 import FrontApp from './front/FrontApp'
+import ImportMovementsPage   from './pages/ImportMovementsPage'
+import TicketCostElementPage from './pages/TicketCostElementPage'
+import TicketCostDetailPage  from './pages/TicketCostDetailPage'
 import './App.css'
 
 function Layout() {
@@ -48,14 +51,17 @@ function App() {
         <Route path="/"                element={<DashboardPage />} />
         <Route path="/tickets"         element={<TicketsPage />} />
         <Route path="/tickets/:id"     element={<TicketDetail />} />
-        <Route path="/tickets/costs"   element={<TicketCostsPage />} />
+        <Route path="/tickets/costs"                          element={<TicketCostsPage />} />
+        <Route path="/tickets/costs/type/:itemtype"           element={<TicketCostElementPage />} />
+        <Route path="/tickets/costs/item/:itemtype/:id"       element={<TicketCostDetailPage />} />
         <Route path="/computers"       element={<ComputersPage />} />
         <Route path="/computers/:id"   element={<ComputerDetail />} />
         <Route path="/monitors"        element={<MonitorsPage />} />
         <Route path="/phones"        element={<PhonesPage />} />
         <Route path="/monitors/:id"    element={<MonitorDetail />} />
         <Route path="/phones/:id"    element={<PhoneDetail />} />
-        <Route path="/import"          element={<ImportPage />} />
+        <Route path="/import"           element={<ImportPage />} />
+        <Route path="/import-movements" element={<ImportMovementsPage />} />
         <Route path="/reset"           element={<ResetPage />} />
         <Route path="/test-sqlite"     element={<TestSQLitePage />} />
         <Route path="/test-kanban"     element={<TestKanbanPage />} />
