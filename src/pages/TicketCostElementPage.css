@@ -1,0 +1,28 @@
+.tce-table th:nth-child(n+2) { text-align: right; }
+
+.tce-cost-cell { text-align: right; white-space: nowrap; font-weight: 500; }
+.tce-cost-total { font-weight: 700; }
+.tce-item-row { cursor: pointer; }
+
+.tce-breadcrumb-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--c-accent);
+  cursor: pointer;
+}
+.tce-breadcrumb-link:hover { text-decoration: underline; }
+
+.tce-back-btn {
+  background: none;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-sm);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-family: var(--font);
+  color: var(--c-text-sec);
+  cursor: pointer;
+}
+.tce-back-btn:hover { background: var(--c-bg); }

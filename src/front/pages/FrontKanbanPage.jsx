@@ -144,8 +144,9 @@ export default function FrontKanbanPage() {
     try {
       const rows = await getTicketCostsForTicket(ticket.id)
       const list = Array.isArray(rows) ? rows : []
-      totalSum = list.reduce((sum, r) => sum + (r.fixed_cost || 0), 0)
-      const lastFixed = list.find(r => (r.type || 'fixed') === 'fixed')
+      const fixedOnly = list.filter(r => (r.type || 'fixed') === 'fixed')
+      const lastFixed = fixedOnly[0]
+      totalSum = lastFixed?.fixed_cost ?? 0
       lastFixedId = lastFixed?.id ?? null
     } catch {/* aucun coût enregistré */ }
     setReopenDialog({ticket, fromSid, toSid, totalSum, lastFixedId})

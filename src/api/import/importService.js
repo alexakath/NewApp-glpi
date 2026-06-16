@@ -1,6 +1,7 @@
 import Papa from 'papaparse'
 import JSZip from 'jszip'
 import { getAllItems, createItem, updateItem, postSubItem, createV1Item, withV1Session, uploadAndLinkDocumentV1 } from '../glpi'
+import { setTicketRefUser } from '../backend'
 import { ImportRegistry } from './detectModules'
 import { KNOWN_ITEM_TYPES, TICKET_STATUS_MAP, TICKET_PRIORITY_MAP, TICKET_TYPE_MAP, SUB_MODULE_ORDER, expandModule, buildItemTypeConfig, normalizeItemType } from './modulesConfig'
 import { MODULES_CONFIG } from './modulesConfig'
@@ -398,6 +399,7 @@ const importTickets = async (rows, registry, onProgress) => {
       const ticketId = String(created?.id ?? created)
 
       if (refTicket) registry.set('tickets', refTicket, { id: ticketId })
+      if (refTicket) await setTicketRefUser(Number(ticketId), refTicket).catch(() => {})
 
       // Items associés au ticket via v1 (Item_Ticket) — AVANT le changement
       // de statut : GLPI refuse d'ajouter des éléments liés à un ticket

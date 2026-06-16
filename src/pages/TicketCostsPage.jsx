@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getTickets, getTicketItems } from '../api/tickets'
 import { getTicketCosts } from '../api/costs'
 import { getAssetFull, ASSET_TYPES } from '../api/assets'
@@ -21,6 +22,7 @@ const itemKey = (link) => {
 }
 
 function TicketCostsPage() {
+  const navigate = useNavigate()
   const [tickets, setTickets]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(null)
@@ -33,7 +35,7 @@ function TicketCostsPage() {
   const [fixedCosts, setFixedCosts]   = useState({})
   const [reopenCosts, setReopenCosts] = useState({})
   // clés des lignes "élément" actuellement dépliées (détail par ticket)
-  const [expandedElements, setExpandedElements] = useState(new Set())
+  // const [expandedElements, setExpandedElements] = useState(new Set())
 
   useEffect(() => {
     let cancelled = false
@@ -157,20 +159,31 @@ function TicketCostsPage() {
     return [...map.values()].sort((a, b) => (a.name || '').localeCompare(b.name || ''))
   }, [tickets, ticketItems, importCosts, fixedCosts, reopenCosts])
 
+  const byType = useMemo (() => {
+    const map = new Map()
+    elementCosts.forEach(item => {
+      const entry = map.get(item.itemtype) ?? {
+        itemtype: item.itemtype,
+        label: ASSET_TYPES[item.itemtype]?.label ?? item.itemtype,
+        fixedTotal: 0, importTotal:0, reopenTotal:0,
+        items: [],
+      }
+      entry.fixedTotal += item.fixedTotal
+      entry.importTotal += item.importTotal
+      entry.reopenTotal += item.reopenTotal
+      entry.items.push(item)
+      map.set(item.itemtype,entry)
+    })
+    return [...map.values()].sort((a,b) => a.label.localeCompare(b.label))
+  }, [elementCosts])
+
   if (loading) return <div className="page-state">Chargement des tickets...</div>
   if (error)   return <div className="page-state page-state--error">Erreur : {error}</div>
 
-  const totalFixedAll  = elementCosts.reduce((sum, e) => sum + e.fixedTotal, 0)
-  const totalImportAll = elementCosts.reduce((sum, e) => sum + e.importTotal, 0)
-  const totalReopenAll = elementCosts.reduce((sum, e) => sum + e.reopenTotal, 0)
+  const totalFixedAll  = byType.reduce((sum, e) => sum + e.fixedTotal, 0)
+  const totalImportAll = byType.reduce((sum, e) => sum + e.importTotal, 0)
+  const totalReopenAll = byType.reduce((sum, e) => sum + e.reopenTotal, 0)
   const grandTotalAll  = totalFixedAll + totalImportAll + totalReopenAll
-
-  const toggleElement = (key) => setExpandedElements((prev) => {
-    const next = new Set(prev)
-    if (next.has(key)) next.delete(key)
-    else next.add(key)
-    return next
-  })
 
   return (
     <div className="page-wrap">
@@ -179,85 +192,44 @@ function TicketCostsPage() {
           <p className="page-breadcrumb">Assistance</p>
           <h1>Coûts des tickets</h1>
         </div>
-        <span className="page-count">{elementCosts.length} élément{elementCosts.length !== 1 ? 's' : ''}</span>
+        <span className="page-count">{byType.length} type{byType.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div className="table-card">
         <table className="data-table cost-element-table">
           <thead>
             <tr>
-              <th className="cost-expand-col"></th>
-              <th>Élément</th>
+              <th>Type d'élément</th>
               <th>Coût saisi</th>
               <th>Coût import</th>
-              <th>Frais de reouverture</th>
+              <th>Frais de réouverture</th>
               <th>Total</th>
             </tr>
           </thead>
           <tbody>
-            {elementCosts.map((el) => {
-              const isOpen = expandedElements.has(el.key)
-              return (
-                <Fragment key={el.key}>
-                  <tr
-                    className={`table-row cost-element-row ${isOpen ? 'is-open' : ''}`}
-                    onClick={() => toggleElement(el.key)}
-                  >
-                    <td className="cost-expand-cell">
-                      <span className={`cost-expand-icon ${isOpen ? 'is-open' : ''}`}>▸</span>
-                    </td>
-                    <td className="title-cell">
-                      <span className="row-title">{ASSET_TYPES[el.itemtype]?.label ?? el.itemtype} — {el.name}</span>
-                    </td>
-                    <td className="cost-cell">{fmtMoney(el.fixedTotal)} €</td>
-                    <td className="cost-cell">{fmtMoney(el.importTotal)} €</td>
-                    <td className="cost-cell">{fmtMoney(el.reopenTotal)} €</td>
-                    <td className="cost-cell cost-cell--total">{fmtMoney(el.fixedTotal + el.importTotal + el.reopenTotal)} €</td>
-                  </tr>
-                  {isOpen && (
-                    <tr className="cost-detail-row">
-                      <td colSpan="6">
-                        <table className="cost-detail-table">
-                          <thead>
-                            <tr>
-                              <th>Ticket</th>
-                              <th>Coût saisi du ticket</th>
-                              <th>Coût import du ticket</th>
-                              <th>Frais de reouverture du ticket</th>
-                              <th>Répartition</th>
-                              <th>Part saisi attribuée</th>
-                              <th>Part import attribuée</th>
-                              <th>Part reouverture attribuée</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {el.details.map((d) => (
-                              <tr key={d.ticketId}>
-                                <td>#{d.ticketId} — {d.ticketName}</td>
-                                <td className="cost-cell">{fmtMoney(d.ticketFixed)} €</td>
-                                <td className="cost-cell">{fmtMoney(d.ticketImport)} €</td>
-                                <td className="cost-cell">{fmtMoney(d.ticketReopen)} €</td>
-                                <td className="muted">
-                                  {d.itemCount > 1 ? `÷ ${d.itemCount} éléments` : 'Entièrement attribué'}
-                                </td>
-                                <td className="cost-cell">{fmtMoney(d.fixedShare)} €</td>
-                                <td className="cost-cell">{fmtMoney(d.importShare)} €</td>
-                                <td className="cost-cell">{fmtMoney(d.reopenShare)} €</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              )
-            })}
+            {byType.map((group) => (
+              <tr
+                key={group.itemtype}
+                className="table-row cost-element-row"
+                onClick={() => navigate(`/tickets/costs/type/${group.itemtype}`, { state: { group } })}
+              >
+                <td className="title-cell">
+                  <span className="row-title">{group.label}</span>
+                  <span className="row-sub">{group.items.length} élément{group.items.length !== 1 ? 's' : ''}</span>
+                </td>
+                <td className="cost-cell">{fmtMoney(group.fixedTotal)} €</td>
+                <td className="cost-cell">{fmtMoney(group.importTotal)} €</td>
+                <td className="cost-cell">{fmtMoney(group.reopenTotal)} €</td>
+                <td className="cost-cell cost-cell--total">
+                  {fmtMoney(group.fixedTotal + group.importTotal + group.reopenTotal)} €
+                </td>
+              </tr>
+            ))}
           </tbody>
-          {elementCosts.length > 0 && (
+          {byType.length > 0 && (
             <tfoot>
               <tr className="cost-footer-row">
-                <td colSpan="2" className="cost-footer-label">Total</td>
+                <td className="cost-footer-label">Total</td>
                 <td className="cost-cell cost-cell--footer">{fmtMoney(totalFixedAll)} €</td>
                 <td className="cost-cell cost-cell--footer">{fmtMoney(totalImportAll)} €</td>
                 <td className="cost-cell cost-cell--footer">{fmtMoney(totalReopenAll)} €</td>
@@ -266,10 +238,11 @@ function TicketCostsPage() {
             </tfoot>
           )}
         </table>
-        {elementCosts.length === 0 && <div className="table-empty">Aucun élément associé aux tickets.</div>}
+        {byType.length === 0 && <div className="table-empty">Aucun élément associé aux tickets.</div>}
       </div>
     </div>
   )
 }
 
 export default TicketCostsPage
+

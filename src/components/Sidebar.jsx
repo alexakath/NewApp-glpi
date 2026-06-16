@@ -55,6 +55,10 @@ const MENU_GROUPS = [
         icon: <SVG><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></SVG>,
       },
       {
+        to: '/import-movements', label: 'Import Mouvements',
+        icon: <SVG><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1"/><polyline points="16 12 12 16 8 12"/><line x1="12" y1="3" x2="12" y2="16"/></SVG>,
+      },
+      {
         to: '/reset', label: 'Réinitialisation',
         icon: <SVG><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></SVG>,
       },

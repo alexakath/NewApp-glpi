@@ -32,6 +32,7 @@ const MODULES = {
         date      TEXT,
         date_mod  TEXT,
         data_json TEXT,
+        ref_user  TEXT,
         synced_at TEXT DEFAULT (datetime('now'))
       )
     `,
