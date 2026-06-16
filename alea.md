@@ -48,3 +48,8 @@ ticket 2, close, 100 (termine avec cout fixe 100)
 
 clique laptop : item 1, item 2
 ex : moniteur : hita hoe firy le moniteur ao de ina avy niseo tamreo (le detail, prix reouverture, etc)
+
+en disant : Utiliser une même fonction
+Vous devez utiliser la même fonction que l'interface ( les fonctions utilise dans kanban) et importer (l'import mouvement) sinon on aura des problèmes pour les alea futures
+On nous a donne ces images la:
+Qu'est ce que ca veut dire ? et qu'est ce qu'on doit faire par rapport a cela?

@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
 import Papa from 'papaparse'
 import { updateTicket, KANBAN_COLUMNS } from '../api/tickets'
-import { getTicketsFromSQLite, getTicketCostsForTicket, addTicketCostToSQLite, deleteTicketCostFromSQLite } from '../api/backend'
+import { getTicketsFromSQLite, addTicketCostToSQLite } from '../api/backend'
+import { applyReopenCost, cancelLastFixedCost } from '../api/ticketCostActions'
 import './ImportMovementsPage.css'
 
 function ImportMovementsPage() {
@@ -46,24 +47,14 @@ function ImportMovementsPage() {
           out.push({ row: label, status: 'ok', msg: `Terminé${cost > 0 ? ` — coût ${cost}` : ''}` })
 
         } else if (mvt === 'open' || mvt === 'reopen') {
-          const pct      = parseFloat(valStr) || 0
-          const costRows = await getTicketCostsForTicket(ticket.id).catch(() => [])
-          const list     = Array.isArray(costRows) ? costRows : []
-          const fixedOnly = list.filter(r => (r.type || 'fixed') === 'fixed')
-          const lastFixed = fixedOnly[0]
-          const lastFixedCost = lastFixed?.fixed_cost ?? 0
-          const reopenCost = lastFixedCost * (pct / 100)
+          const pct = parseFloat(valStr) || 0
           await updateTicket(ticket.id, { status: KANBAN_COLUMNS[2].dropStatus })
-          if (reopenCost > 0) await addTicketCostToSQLite(ticket.id, reopenCost, 'reopen')
-          out.push({ row: label, status: 'ok', msg: `Réouvert — ${pct}% de ${lastFixedCost.toFixed(2)} = ${reopenCost.toFixed(2)}` })
+          const { base, cost: reopenCost } = await applyReopenCost(ticket.id, pct)
+          out.push({ row: label, status: 'ok', msg: `Réouvert — ${pct}% de ${base.toFixed(2)} = ${reopenCost.toFixed(2)}` })
 
         } else if (mvt === 'cancel') {
-          const costRows  = await getTicketCostsForTicket(ticket.id).catch(() => [])
-          const list      = Array.isArray(costRows) ? costRows : []
-          const fixedOnly = list.filter(r => (r.type || 'fixed') === 'fixed')
-          const lastFixed = fixedOnly[0]
           await updateTicket(ticket.id, { status: KANBAN_COLUMNS[2].dropStatus })
-          if (lastFixed) await deleteTicketCostFromSQLite(lastFixed.id).catch(() => {})
+          await cancelLastFixedCost(ticket.id)
           out.push({ row: label, status: 'ok', msg: 'Annulé — dernier coût fixe supprimé' })
 
         } else {
