@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react'
 import Papa from 'papaparse'
 import { updateTicket, KANBAN_COLUMNS } from '../api/tickets'
-import { getTicketsFromSQLite, addTicketCostToSQLite } from '../api/backend'
-import { applyReopenCost, cancelLastFixedCost } from '../api/ticketCostActions'
+import { getTicketsFromSQLite } from '../api/backend'
+import { applyReopenCost, cancelLastFixedCost, applyCloseCost } from '../api/ticketCostActions'
 import './ImportMovementsPage.css'
 
 // ── 1. LA FONCTION MÉTIER — source de vérité ─────────────────────────────────
@@ -17,7 +17,7 @@ const processOneMovement = async (refStr, mvt, valStr, mode, ticketsByRef, ticke
     if (mvt === 'close') {
       const cost = parseFloat(valStr) || 0
       await updateTicket(ticket.id, { status: KANBAN_COLUMNS[5].dropStatus })
-      await addTicketCostToSQLite(ticket.id, cost, 'fixed', )
+      await applyCloseCost(ticket.id, cost, 'fixed', )
       return { row: label, status: 'ok', msg: `Terminé${cost > 0 ? ` — coût ${cost}` : ''}` }
 
     } else if (mvt === 'open' || mvt === 'reopen') {

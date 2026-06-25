@@ -28,6 +28,10 @@ const MENU_GROUPS = [
         to: '/tickets/costs', label: 'Coûts tickets',
         icon: <SVG><path d="M9 7h6M9 11h6M9 15h4"/><rect x="3" y="3" width="18" height="18" rx="2"/></SVG>,
       },
+      {
+        to: '/tickets/costs/manage', label: 'Gestion des couts',
+        icon: <SVG><path d="M9 7h6M9 11h6M9 15h4"/><rect x="3" y="3" width="18" height="18" rx="2"/></SVG>,
+      },
     ],
   },
   {

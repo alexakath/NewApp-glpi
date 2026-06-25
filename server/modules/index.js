@@ -100,7 +100,26 @@ const MODULES = {
         ticket_id   INTEGER NOT NULL,
         fixed_cost  REAL NOT NULL,
         type TEXT NOT NULL DEFAULT 'fixed',
+        pct REAL,
+        mode INTEGER,
         created_at TEXT    DEFAULT (datetime('now'))
+      )
+    `,
+  },
+  cancelled_costs: {
+    orderBy: 'cancelled_at DESC',
+    schema: `
+      CREATE TABLE IF NOT EXISTS cancelled_costs (
+        id  INTEGER PRIMARY KEY AUTOINCREMENT,
+        original_id   INTEGER NOT NULL,
+        ticket_id   INTEGER NOT NULL,
+        fixed_cost  REAL NOT NULL,
+        type TEXT NOT NULL DEFAULT 'fixed',
+        pct REAL,
+        mode INTEGER,
+        created_at TEXT    DEFAULT (datetime('now')),
+        prev_status INTEGER DEFAULT 5,
+        cancelled_at TEXT DEFAULT (datetime('now'))
       )
     `,
   },

@@ -20,6 +20,7 @@ import FrontApp from './front/FrontApp'
 import ImportMovementsPage   from './pages/ImportMovementsPage'
 import TicketCostElementPage from './pages/TicketCostElementPage'
 import TicketCostDetailPage  from './pages/TicketCostDetailPage'
+import CostManagementPage from './pages/CostManagementPage'
 import './App.css'
 
 function Layout() {
@@ -54,6 +55,8 @@ function App() {
         <Route path="/tickets/costs"                          element={<TicketCostsPage />} />
         <Route path="/tickets/costs/type/:itemtype"           element={<TicketCostElementPage />} />
         <Route path="/tickets/costs/item/:itemtype/:id"       element={<TicketCostDetailPage />} />
+        <Route path="/tickets/costs/manage"       element={<CostManagementPage />} />
+
         <Route path="/computers"       element={<ComputersPage />} />
         <Route path="/computers/:id"   element={<ComputerDetail />} />
         <Route path="/monitors"        element={<MonitorsPage />} />

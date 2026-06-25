@@ -57,3 +57,23 @@ Mode 3 : moyenne des couts existants rehetra
 ex : 50, 100 : moyenne : 75, si reouverture 10% donc 10% anle 75 donc 7,5 cout reouverture
 Mode 4 : somme des couts rehetra no anagalana % : 150 total dia 10% donc 15 ny frais reouverture
 Import : asiana colonne ray oe mode : 1,2,3,4 valeur dia refa reouverture(open) ihany vo ilaina
+
+Rehefa reouverture no miova : dia le valeur iny iany no miova selon anle modification natao
+fa rehefa le super cost no miova : dia ze reouverture rehetra nifandray tamn'iny super cost niova iny miova daoly
+
+reouverture : modif : pourcentage et mode
+super cost : valeur
+
+Ao anatinle page asiana tableau ray : liste des annulations 
+Avec bouton action : azo averina : restaurena
+Mipetaka eo le super cost mifanaraka aminy
+parametre vaovao : plafond de reouverture : champ ray anaty sqlite
+plafond : tsy mahazo miotran'iny en %
+supercost = 100 plafond = 20% tsy mahazo miotran'ny 20% ny calcul anle reouverture
+raha 15% le izy dia tafiditra ny 15% ra 30% dia 20% iany no tafiditra am mode rehetra
+plafond = somme cost anterieur amle anovana reouverture
+
+30% > somme super cost et somme reouverture ne doit pas depasser les 30%
+
+Annulation : recalcul par rapport anle parametre
+etape a faire a chaque reouverture : recalcul de tous les costs anterieurs

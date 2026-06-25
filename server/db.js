@@ -16,6 +16,12 @@ const ticketCostsCols = db.prepare("PRAGMA table_info(ticket_costs)").all().map(
 if(!ticketCostsCols.includes('type')) {
   db.exec("ALTER TABLE ticket_costs ADD COLUMN type TEXT NOT NULL DEFAULT 'fixed'")
 }
+if(!ticketCostsCols.includes('pct')) {
+  db.exec("ALTER TABLE ticket_costs ADD COLUMN pct REAL")
+}
+if(!ticketCostsCols.includes('mode')) {
+  db.exec("ALTER TABLE ticket_costs ADD COLUMN mode INTEGER")
+}
 
 const ticketsCols = db.prepare("PRAGMA table_info(tickets)").all().map(c => c.name)
 if (!ticketsCols.includes('ref_user')) {

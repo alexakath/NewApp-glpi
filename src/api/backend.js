@@ -74,11 +74,11 @@ export const updateKanbanColumn = (statusId, patch) =>
     body:    JSON.stringify({ ref_user: refUser }),
   }).then(json)
 
-export const addTicketCostToSQLite = (ticketId, fixedCost, type='fixed') =>
+export const addTicketCostToSQLite = (ticketId, fixedCost, type='fixed', pct=null, mode=null) =>
   fetch(`${BASE}/ticket_costs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ticket_id: ticketId, fixed_cost: fixedCost, type }),
+    body: JSON.stringify({ ticket_id: ticketId, fixed_cost: fixedCost, type, pct, mode }),
   }).then(json)
 
   export const getTicketCostsForTicket = (ticketId) =>
@@ -86,5 +86,30 @@ export const addTicketCostToSQLite = (ticketId, fixedCost, type='fixed') =>
 
    export const deleteTicketCostFromSQLite = (id) =>
     fetch(`${BASE}/ticket_costs/${id}`, { method: 'DELETE'}).then(json)
+
+export const getAllTicketCosts = () =>
+  fetch(`${BASE}/ticket_costs`).then(json)
+
+export const updateTicketCostInSQLite = (id,data) =>
+  fetch(`${BASE}/ticket_costs/${id}`, {
+    method: 'PUT',
+    headers : { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(json)
+
+export const cancelTicketCostToArchive = (id, prevStatus = 5) =>
+  fetch (`${BASE}/ticket_costs/cancel/${id}`, {
+    method: 'POST',
+    headers: { 'Content-Type' : 'application/json' },
+    body: JSON.stringify({prev_status : prevStatus }),
+  }).then(json)
+
+export const getCancelledCosts = () =>
+  fetch(`${BASE}/ticket_costs/cancelled`).then(json)
+
+export const restoreCancelledCost = (id) =>
+  fetch(`${BASE}/ticket_costs/restore/${id}`, {
+    method: 'POST'
+  }).then(json)
 
 export const clearTicketCostsFromSQLite = () => clearFromSQLite('ticket_costs')

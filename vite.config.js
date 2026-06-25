@@ -7,11 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api.php': {
-        target: 'http://localhost',
+        target: 'http://glpi.localhost',
         changeOrigin: true,
       },
       '/apirest.php': {
-        target: 'http://localhost',
+        target: 'http://glpi.localhost',
         changeOrigin: true,
       },
       // Backend Node.js + SQLite

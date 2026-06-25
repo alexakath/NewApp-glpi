@@ -1,4 +1,4 @@
-analyse ce projet, la derniere implementation est : l'import de mouvement et la modification de tableau cout (Detail)
+analyse ce projet, la derniere implementation est : l'import de mouvement, la modification de tableau cout (Detail) et les modes de calcul et la page CostManagementPAge et ce qui se rattache a elle
 
 Suis ce workflow a partir de maintenant
 
@@ -20,11 +20,11 @@ L'utilisateur veut un cycle d'itération rapide (5-8 min) :
 5. Si le même changement doit être reporté dans du code similaire/dupliqué ailleurs (l'utilisateur recopie dans un autre projet identique au même stade d'avancement), ne pas tout réexpliquer : dire simplement "copie-colle ceci et change cela / ajoute cela".
 
 **INTERDIT (correction explicite) :** Ne JAMAIS dire "copie-colle tout le contenu du fichier" comme méthode de report. Le compte-rendu doit être un diff précis ligne par ligne : pour chaque édition, donner la plage de lignes ORIGINALE concernée, le code "avant" (ou juste "supprimer lignes X-Y" pour une suppression pure), et le code "après" exact à coller. Le raccourci "copie-colle ceci et change cela" ne s'applique QUE quand du code existant ailleurs dans LEUR AUTRE projet (pas dans la version que j'ai modifiée) est identique/similaire et réutilisable tel quel — jamais comme substitut au diff précis.
-Et aussi pas de css a partir de maintenant dans les codes que tu vas donner on enleve les css sophistique et tout cela car ca me fais perdre temps, les className dans les div, si il faut vraiment mettre, on met juste un peu sur le div  principale par exemple, je ne veux pas perdre de temps a copier tous les css que ce soit en style dans les div ou dans de fichier separe
+Et aussi pas de css et les icones, a partir de maintenant dans les codes que tu vas donner on enleve les css sophistique et tout cela car ca me fais perdre temps, les className dans les div, si il faut vraiment mettre, on met juste un peu sur le div  principale par exemple, je ne veux pas perdre de temps a copier tous les css que ce soit en style dans les div ou dans de fichier separe
 
 **Why:** L'utilisateur réplique ce projet dans un autre dossier VS Code au même état d'avancement et doit reporter manuellement les modifs — il a besoin d'instructions exactes et localisées pour ne pas perdre de temps et ne pas faire d'erreurs. Pas de temps à perdre, "pas le droit aux erreurs". Recopier un fichier entier est jugé inacceptable (trop risqué/long).
 
-**How to apply:** Pour chaque demande de fonctionnalité dans ce projet (NewApp-glpi), suivre ce cycle. Pour le compte-rendu final : utiliser `git diff` sur les fichiers modifiés pour extraire les hunks avec numéros de ligne exacts, puis traduire chaque hunk en instruction "remplace lignes X-Y par / supprime lignes X-Y / ajoute après ligne X". Privilégier la concision pendant l'implémentation, puis être exhaustif et précis (ligne par ligne, avec extraits de code) uniquement dans le compte-rendu final post-validation.
+**How to apply:** Pour chaque demande de fonctionnalité dans ce projet, suivre ce cycle. Pour le compte-rendu final : utiliser `git diff` sur les fichiers modifiés pour extraire les hunks avec numéros de ligne exacts, puis traduire chaque hunk en instruction "remplace lignes X-Y par / supprime lignes X-Y / ajoute après ligne X". Privilégier la concision pendant l'implémentation, puis être exhaustif et précis (ligne par ligne, avec extraits de code) uniquement dans le compte-rendu final post-validation.
 
 
 Dis moi si t'as compris

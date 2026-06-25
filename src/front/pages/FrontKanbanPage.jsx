@@ -4,8 +4,8 @@ import {
   getTickets, updateTicket,
   KANBAN_STATUS_IDS, KANBAN_STATUS_LABELS, KANBAN_COLUMNS, statusToColumn,
 } from '../../api/tickets'
-import { getKanbanColumns, getKanbanLang, addTicketCostToSQLite } from '../../api/backend'
-import { getLastFixedCost, applyReopenCost, cancelLastFixedCost } from '../../api/ticketCostActions'
+import { getKanbanColumns, getKanbanLang } from '../../api/backend'
+import { getLastFixedCost, applyReopenCost, cancelLastFixedCost, applyCloseCost } from '../../api/ticketCostActions'
 import KanbanTicketModal from '../components/KanbanTicketModal'
 import './FrontKanbanPage.css'
 
@@ -126,7 +126,7 @@ export default function FrontKanbanPage() {
     try {
       await moveTicketStatus(ticket, fromSid, toSid)
       if (toSid === 5 && fixedCost !== '') {
-        await addTicketCostToSQLite(ticket.id, parseFloat(fixedCost)).catch(() => {})
+        await applyCloseCost(ticket.id, parseFloat(fixedCost)).catch(() => {})
       }
     } catch (err) {
       alert(`Erreur lors du changement de statut : ${err.message}`)
@@ -163,7 +163,7 @@ export default function FrontKanbanPage() {
     setReopenBusy(true)
     try{
       await moveTicketStatus(ticket, fromSid, toSid)
-      await cancelLastFixedCost(ticket.id)
+      await cancelLastFixedCost(ticket.id, fromSid)
     } catch(err) {
       alert(`Erreur lors du changement de statut : ${err.message}`)
     } finally {
